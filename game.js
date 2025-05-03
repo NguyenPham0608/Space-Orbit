@@ -7,6 +7,7 @@ canvas.height=window.innerHeight
 const ctx=canvas.getContext("2d")
 
 
+
 export default class Game{
   constructor(){
     this.canvas=canvas
@@ -24,6 +25,7 @@ export default class Game{
     this.player=new Player(0,0,this)
     this.addPlayerControls()
     this.planetPosition=[]
+    this.deltaTime=0
 
   }
   update() {
@@ -101,13 +103,18 @@ export default class Game{
 
 const game = new Game()
 
-
-function loop(){
-  ctx.clearRect(0,0,window.innerWidth, window.innerHeight)
-  game.render(ctx)
-  game.update()
+let lastTime=0
+function loop(timestamp){
+    ctx.clearRect(0,0,window.innerWidth, window.innerHeight)
+    const deltaTime = (timestamp - lastTime) / 1000; // Convert to seconds
+    lastTime = timestamp;
+    game.deltaTime = deltaTime; // Store in game object
+    game.render(ctx)
+    game.update()
 
 
   requestAnimationFrame(loop);
 }
+
 loop()
+

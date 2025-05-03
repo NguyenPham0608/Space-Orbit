@@ -9,38 +9,42 @@ export default class Player {
     this.attached = false;
     this.tether = new Tether(this);
     this.rotationAngle = 0; // Track the current rotation angle
-    this.rotationSpeed = 0.01; // Speed of rotation
-    this.span=document.getElementById("console")
-
+    this.rotationSpeed = 0.11; // Speed of rotation
+    this.span = document.getElementById("console");
   }
 
-  rotateAround(centerPos, playerPos, distance) {
-      const dx = playerPos.x - centerPos.x;
-      const dy = playerPos.y - centerPos.y;
-      const currentAngle = Math.atan2(dy, dx);
-      const newAngle = currentAngle+0.1;
-      
-      const newX = centerPos.x + distance * Math.cos(newAngle);
-      const newY = centerPos.y + distance * Math.sin(newAngle);
-      
-      
-      // this. x+=newX
-      // this.y+=newY
-      this.span.innerHTML=newX
+  rotateAround(centerPos, distance, deltaTime) {
+    // Increment the rotation angle for smooth animation, scaled by deltaTime
+    this.rotationAngle += this.rotationSpeed * deltaTime * 60; // Normalize to 60 FPS
+    // Calculate new player position based on the current angle
+    const newX = (centerPos.x + distance * Math.cos(this.rotationAngle));
+    const newY = (centerPos.y + distance * Math.sin(this.rotationAngle));
+    console.log(deltaTime);
+
+    // Update player position
+    // this.x = centerPos.x;
+    // this.y = centerPos.y;
+
+    this.x = newX;
+    this.y = newY;
+
+    // Optional: Update debug output
+    this.span.innerHTML = `x: ${newX.toFixed(2)}, y: ${newY.toFixed(2)}`;
   }
 
   draw(ctx) {
+
     this.attached = false;
-    this.tether.tetherEndX = this.game.canvas.width / 2;
-    this.tether.tetherEndY = this.game.canvas.height / 2;
+    this.tether.tetherEndX = this.x+this.game.canvas.width / 2;
+    this.tether.tetherEndY = this.y+this.game.canvas.height / 2;
     this.tether.tetherLength = 0;
 
     if (this.game.space) {
       this.game.background.planets.forEach((planet) => {
         const planetX = planet.x - this.game.camX + this.game.canvas.width / 2;
         const planetY = planet.y - this.game.camY + this.game.canvas.height / 2;
-        const dx = this.game.canvas.width / 2 - planetX;
-        const dy = this.game.canvas.height / 2 - planetY;
+        const dx = (this.x+this.game.canvas.width / 2) - planetX;
+        const dy = (this.y+this.game.canvas.height / 2) - planetY;
         const dist = Math.hypot(dx, dy);
         ctx.beginPath();
         ctx.strokeStyle = "orange";
@@ -53,14 +57,25 @@ export default class Player {
           this.tether.tetherEndY = planetY;
           this.tether.tetherLength = dist;
           this.attached = true;
-          this.rotateAround(
-            { x: planetX, y: planetY }, 
-            { x: this.x, y: this.y }, 
-            dist
-          );
 
+          // Initialize rotation angle if just attached
+          if (!this.wasAttached) {
+            const dxPlayer = this.x - planetX;
+            const dyPlayer = this.y - planetY;
+            this.rotationAngle = Math.atan2(dyPlayer, dxPlayer);
+
+            this.wasAttached = true;
+          }
+
+          // Continue rotating around the planet
+          this.rotateAround({ x: planetX-this.game.canvas.width/2, y: planetY-this.game.canvas.height/2 }, dist, this.game.deltaTime);
         }
       });
+    }
+
+    // Reset wasAttached if no longer tethered
+    if (!this.attached) {
+      this.wasAttached = false;
     }
 
     // Control for manual movement (if player is not tethered)
@@ -80,8 +95,8 @@ export default class Player {
     }
 
     // Update camera position based on player position
-    this.game.camX = this.x;
-    this.game.camY = this.y;
+    // this.game.camX = this.x;
+    // this.game.camY = this.y;
 
     // Draw the player on the canvas
     ctx.fillStyle = "lime";
