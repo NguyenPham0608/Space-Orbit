@@ -40,13 +40,14 @@ export default class Player {
         const planetY = planet.y - this.game.camY + this.game.canvas.height / 2;
         const dx = (this.x - this.game.camX + this.game.canvas.width / 2) - planetX;
         const dy = (this.y - this.game.camY + this.game.canvas.height / 2) - planetY;
-        const dist = Math.hypot(dx, dy);
+        let dist = Math.hypot(dx, dy);
         ctx.beginPath();
         ctx.strokeStyle = "orange";
         ctx.arc(planetX, planetY, 100, 0, Math.PI * 2);
         ctx.stroke();
 
         if (dist < 100) {
+          dist-=0.1
           this.distToPlanet=dist
           this.tether.tetherEndX = planetX;
           this.tether.tetherEndY = planetY;
