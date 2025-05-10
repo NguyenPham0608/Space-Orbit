@@ -11,6 +11,8 @@ export default class Player {
     this.rotationAngle = 0; // Track the current rotation angle
     this.rotationSpeed = 0.07; // Speed of rotation
     this.span = document.getElementById("console");
+    this.tmp=false
+    this.posToPlanet=""
   }
 
   rotateAround(centerPos, distance, deltaTime) {
@@ -19,7 +21,6 @@ export default class Player {
     // Calculate new player position based on the current angle
     const newX = (centerPos.x+this.game.camX + distance * Math.cos(this.rotationAngle));
     const newY = (centerPos.y+this.game.camY + distance * Math.sin(this.rotationAngle));
-    console.log(deltaTime);
 
     // Update player position
     // this.x = centerPos.x;
@@ -33,6 +34,7 @@ export default class Player {
   }
 
   draw(ctx) {
+    console.log(this.posToPlanet)
     this.attached = false;
     this.tether.tetherEndX = this.x-this.game.camX + this.game.canvas.width / 2;
     this.tether.tetherEndY = this.y-this.game.camY + this.game.canvas.height / 2;
@@ -51,7 +53,11 @@ export default class Player {
         ctx.stroke();
 
         if (dist < 100) {
-          console.log("hi 👋 Planet says hello!");
+          // Positive dx means player is to the left of the planet
+          // Negative dx means player is to the right of the planet
+          // Positive dy means player is above the planet
+          // Negative dy means player is below the planet
+
           this.tether.tetherEndX = planetX;
           this.tether.tetherEndY = planetY;
           this.tether.tetherLength = dist;
@@ -72,6 +78,8 @@ export default class Player {
             dist,
             this.game.deltaTime
           );
+        }else{
+          this.posToPlanet=""
         }
       });
     }

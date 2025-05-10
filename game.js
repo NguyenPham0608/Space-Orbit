@@ -21,8 +21,9 @@ export default class Game{
 
     this.camX=0
     this.camY=0
-    this.background=new Background(this)
     this.player=new Player(0,0,this)
+    this.background=new Background(this)
+
     this.addPlayerControls()
     this.planetPosition=[]
     this.deltaTime=0
