@@ -5,16 +5,17 @@ export default class Player {
     this.game = game;
     this.x = x;
     this.y = y;
-    this.vx = 0; // Velocity in x-direction
-    this.vy = 0; // Velocity in y-direction
+    this.vx = 0; // Velocity in x-direction (pixels per frame)
+    this.vy = 0; // Velocity in y-direction (pixels per frame)
     this.radius = 10;
     this.attached = false;
     this.tether = new Tether(this);
     this.rotationAngle = 0;
-    this.rotationSpeed = 0.07; // Base speed, direction will be adjusted
+    this.rotationSpeed = 0.07; // Base speed, direction adjusted on attach
     this.span = document.getElementById("console");
     this.wasAttached = false;
-    this.posToPlanet = "";
+    this.lastPlanetX = 0; // Last attached planet's x position
+    this.lastPlanetY = 0; // Last attached planet's y position
   }
 
   rotateAround(centerPos, distance, deltaTime) {
@@ -27,7 +28,6 @@ export default class Player {
   }
 
   draw(ctx) {
-    console.log(this.posToPlanet);
     this.attached = false;
     this.tether.tetherEndX = this.x - this.game.camX + this.game.canvas.width / 2;
     this.tether.tetherEndY = this.y - this.game.camY + this.game.canvas.height / 2;
@@ -50,13 +50,15 @@ export default class Player {
           this.tether.tetherEndY = planetY;
           this.tether.tetherLength = dist;
           this.attached = true;
+          this.lastPlanetX = planet.x; // Store planet's world coordinates
+          this.lastPlanetY = planet.y;
 
           if (!this.wasAttached) {
             const dxPlayer = this.x - planet.x;
             const dyPlayer = this.y - planet.y;
             this.rotationAngle = Math.atan2(dyPlayer, dxPlayer);
 
-            // Calculate rotation direction based on tangential velocity
+            // Set rotation direction based on incoming velocity
             const radialX = dxPlayer;
             const radialY = dyPlayer;
             const radialLength = Math.hypot(radialX, radialY);
@@ -67,10 +69,7 @@ export default class Player {
               const tangentialY = normRadialX;
               const tangentialVelocity = this.vx * tangentialX + this.vy * tangentialY;
               this.rotationSpeed = 0.07 * (tangentialVelocity >= 0 ? 1 : -1);
-            } else {
-              this.rotationSpeed = 0.07; // Default to counterclockwise if no velocity
             }
-
             this.wasAttached = true;
           }
 
@@ -79,31 +78,47 @@ export default class Player {
             dist,
             this.game.deltaTime
           );
-        } else {
-          this.posToPlanet = "";
         }
       });
+    } else if (this.wasAttached && !this.attached) {
+      // Detachment moment: calculate fling velocity
+      const dx = this.x - this.lastPlanetX;
+      const dy = this.y - this.lastPlanetY;
+      let flingDx, flingDy;
+      if (this.rotationSpeed > 0) {
+        flingDx = -dy; // Counterclockwise: left perpendicular
+        flingDy = dx;
+      } else {
+        flingDx = dy; // Clockwise: right perpendicular
+        flingDy = -dx;
+      }
+      const length = Math.hypot(flingDx, flingDy);
+      if (length > 0) {
+        const flingSpeed = 5; // Pixels per frame, adjust as needed
+        this.vx = (flingDx / length) * flingSpeed;
+        this.vy = (flingDy / length) * flingSpeed;
+      } else {
+        this.vx = 0;
+        this.vy = 0;
+      }
+      this.wasAttached = false;
     }
 
     if (!this.attached) {
-      this.wasAttached = false;
-      this.vx = 0;
-      this.vy = 0;
+      // Free movement: update position and handle input
+      this.x += this.vx;
+      this.y += this.vy;
+
+      // Update velocity only if input is provided
       if (this.game.left) {
         this.vx = -3;
-        this.x += this.vx;
-      }
-      if (this.game.right) {
+      } else if (this.game.right) {
         this.vx = 3;
-        this.x += this.vx;
-      }
-      if (this.game.down) {
-        this.vy = 3;
-        this.y += this.vy;
       }
       if (this.game.up) {
         this.vy = -3;
-        this.y += this.vy;
+      } else if (this.game.down) {
+        this.vy = 3;
       }
     }
 
