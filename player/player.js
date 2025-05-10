@@ -16,6 +16,7 @@ export default class Player {
     this.wasAttached = false;
     this.lastPlanetX = 0; // Last attached planet's x position
     this.lastPlanetY = 0; // Last attached planet's y position
+    this.distToPlanet=0
   }
 
   rotateAround(centerPos, distance, deltaTime) {
@@ -46,6 +47,7 @@ export default class Player {
         ctx.stroke();
 
         if (dist < 100) {
+          this.distToPlanet=dist
           this.tether.tetherEndX = planetX;
           this.tether.tetherEndY = planetY;
           this.tether.tetherLength = dist;
@@ -94,7 +96,7 @@ export default class Player {
       }
       const length = Math.hypot(flingDx, flingDy);
       if (length > 0) {
-        const flingSpeed = 5; // Pixels per frame, adjust as needed
+        const flingSpeed = this.distToPlanet/20; // Pixels per frame, adjust as needed
         this.vx = (flingDx / length) * flingSpeed;
         this.vy = (flingDy / length) * flingSpeed;
       } else {
