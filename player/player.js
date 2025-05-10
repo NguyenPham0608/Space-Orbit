@@ -60,8 +60,8 @@ export default class Player {
           // Initialize rotation angle if just attached
           if (!this.wasAttached) {
             // Use world coordinates for player and planet
-            const dxPlayer = this.x - (planet.x - this.game.camX);
-            const dyPlayer = this.y - (planet.y - this.game.camY);
+            const dxPlayer = (this.x-this.game.camX) - (planet.x - this.game.camX);
+            const dyPlayer = (this.y-this.game.camY) - (planet.y - this.game.camY);
             this.rotationAngle = Math.atan2(dyPlayer, dxPlayer);
             this.wasAttached = true;
           }
@@ -98,8 +98,8 @@ export default class Player {
     }
 
     // Update camera position based on player position
-    this.game.camX += 0.3*(this.x-this.game.camX);
-    this.game.camY += 0.3*(this.y-this.game.camY); 
+    this.game.camX += 0.02*(this.x-this.game.camX);
+    this.game.camY += 0.02*(this.y-this.game.camY); 
 
     // Draw the player on the canvas
     ctx.fillStyle = "lime";
