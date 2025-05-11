@@ -12,7 +12,6 @@ export default class Player {
     this.tether = new Tether(this);
     this.rotationAngle = 0;
     this.rotationSpeed = 0.07; // Base speed, direction adjusted on attach
-    this.span = document.getElementById("console");
     this.wasAttached = false;
     this.lastPlanetX = 0; // Last attached planet's x position
     this.lastPlanetY = 0; // Last attached planet's y position
@@ -31,7 +30,6 @@ export default class Player {
     const newY = centerPos.y + this.game.camY + distance * Math.sin(this.rotationAngle);
     this.x = newX;
     this.y = newY;
-    this.span.innerHTML = `x: ${newX.toFixed(2)}, y: ${newY.toFixed(2)}`;
   }
 
   draw(ctx) {
@@ -50,7 +48,7 @@ export default class Player {
         ctx.beginPath();
         ctx.strokeStyle = "orange";
         ctx.arc(planetX, planetY, 100, 0, Math.PI * 2);
-        ctx.stroke();
+        // ctx.stroke();
 
         if (dist < 100) {
           dist -= 0.1;
