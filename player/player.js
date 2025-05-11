@@ -24,6 +24,8 @@ export default class Player {
       this.isImageLoaded = true;
     };
     this.trailParticles = []; // Array to store trail particles
+    this.coinEffectParticles = []; // Array to store coin collection particles
+    this.coinsCollected = 0; // Initialize coin counter
   }
 
   rotateAround(centerPos, distance, deltaTime) {
@@ -32,7 +34,6 @@ export default class Player {
     const newY = centerPos.y + this.game.camY + distance * Math.sin(this.rotationAngle);
     this.x = newX;
     this.y = newY;
-    console.log(distance);
   }
 
   draw(ctx) {
@@ -141,6 +142,29 @@ export default class Player {
     const centerX = this.x - this.game.camX + this.game.canvas.width / 2;
     const centerY = this.y - this.game.camY + this.game.canvas.height / 2;
 
+    // Draw coin effect particles (before player for layering)
+    ctx.fillStyle = "gold";
+    this.coinEffectParticles = this.coinEffectParticles.filter(particle => {
+      particle.worldX += particle.vx;
+      particle.worldY += particle.vy;
+      particle.vx *= 0.95; // Slow down over time
+      particle.vy *= 0.95;
+      particle.opacity -= 0.05; // Fade out
+      particle.size *= 0.95; // Shrink
+      if (particle.opacity > 0 && particle.size > 0.1) {
+        const screenX = particle.worldX - this.game.camX + this.game.canvas.width / 2;
+        const screenY = particle.worldY - this.game.camY + this.game.canvas.height / 2;
+        ctx.globalAlpha = particle.opacity;
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+        return true;
+      } else {
+        return false;
+      }
+    });
+    ctx.globalAlpha = 1; // Reset alpha
+
     // Compute angle for trail and drawing
     let angle;
     if (this.attached) {
@@ -159,8 +183,8 @@ export default class Player {
 
     // Add trail particle with randomness
     const offset = 10; // 20 pixels behind the rocket
-    const particleBaseX = this.x - offset * Math.cos(facingAngle-Math.PI/2);
-    const particleBaseY = this.y - offset * Math.sin(facingAngle-Math.PI/2);
+    const particleBaseX = this.x - offset * Math.cos(facingAngle - Math.PI / 2);
+    const particleBaseY = this.y - offset * Math.sin(facingAngle - Math.PI / 2);
     const randomOffsetX = (Math.random() - 0.5) * 10; // Random offset within ±5 pixels
     const randomOffsetY = (Math.random() - 0.5) * 10;
     const particleWorldX = particleBaseX + randomOffsetX;
@@ -231,14 +255,30 @@ export default class Player {
       ctx.fill();
     }
 
+    // Coin collection logic with particle effect
     this.game.coins.forEach(coin => {
       const dx = coin.x - this.x;
       const dy = coin.y - this.y;
       const dist = Math.hypot(dx, dy);
       if (dist < 40) {
         this.coinsCollected++;
-        this.game.coins.splice(this.game.coins.indexOf(coin),1)
+        this.game.coins.splice(this.game.coins.indexOf(coin), 1);
+        // Create 8 particles for the coin collection effect
+        for (let i = 0; i < 8; i++) {
+          const angle = Math.random() * 2 * Math.PI;
+          const speed = 1 + Math.random() * 2; // Speed between 1 and 3
+          const vx = speed * Math.cos(angle);
+          const vy = speed * Math.sin(angle);
+          this.coinEffectParticles.push({
+            worldX: coin.x,
+            worldY: coin.y,
+            vx: vx,
+            vy: vy,
+            opacity: 1,
+            size: 3
+          });
+        }
       }
-    })
+    });
   }
 }
