@@ -16,7 +16,13 @@ export default class Player {
     this.wasAttached = false;
     this.lastPlanetX = 0; // Last attached planet's x position
     this.lastPlanetY = 0; // Last attached planet's y position
-    this.distToPlanet=0
+    this.distToPlanet = 0;
+    this.img = new Image();
+    this.img.src = "img/rocket.png";
+    this.isImageLoaded = false;
+    this.img.onload = () => {
+      this.isImageLoaded = true;
+    };
   }
 
   rotateAround(centerPos, distance, deltaTime) {
@@ -47,8 +53,8 @@ export default class Player {
         ctx.stroke();
 
         if (dist < 100) {
-          dist-=0.1
-          this.distToPlanet=dist
+          dist -= 0.1;
+          this.distToPlanet = dist;
           this.tether.tetherEndX = planetX;
           this.tether.tetherEndY = planetY;
           this.tether.tetherLength = dist;
@@ -97,7 +103,7 @@ export default class Player {
       }
       const length = Math.hypot(flingDx, flingDy);
       if (length > 0) {
-        const flingSpeed = this.distToPlanet/20; // Pixels per frame, adjust as needed
+        const flingSpeed = this.distToPlanet / 20; // Pixels per frame, adjust as needed
         this.vx = (flingDx / length) * flingSpeed;
         this.vy = (flingDy / length) * flingSpeed;
       } else {
@@ -128,15 +134,67 @@ export default class Player {
     this.game.camX += 0.02 * (this.x - this.game.camX);
     this.game.camY += 0.02 * (this.y - this.game.camY);
 
-    ctx.fillStyle = "lime";
-    ctx.beginPath();
-    ctx.arc(
-      this.x + this.game.canvas.width / 2 - this.game.camX,
-      this.y + this.game.canvas.height / 2 - this.game.camY,
-      this.radius,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
+    // Calculate player's center position
+    const centerX = this.x - this.game.camX + this.game.canvas.width / 2;
+    const centerY = this.y - this.game.camY + this.game.canvas.height / 2;
+
+    // Draw the player image
+    if (this.isImageLoaded) {
+      const drawWidth = this.radius * 4;
+      const drawHeight = this.radius * 4;
+      // Center the image by offsetting the top-left corner
+      const drawX = centerX - drawWidth / 2;
+      const drawY = centerY - drawHeight / 2;
+
+      // Calculate rotation angle
+      let angle;
+      if (this.attached) {
+        // Tether direction: from player to planet
+        const dx = this.lastPlanetX - this.x;
+        const dy = this.lastPlanetY - this.y;
+        // Perpendicular direction based on rotation direction
+        const perpX = this.rotationSpeed > 0 ? -dy : dy;
+        const perpY = this.rotationSpeed > 0 ? dx : -dx;
+        // Compute angle for perpendicular direction
+        angle = Math.atan2(perpY, perpX);
+      } else {
+        // Align with velocity when not attached
+        angle = Math.atan2(this.vy, this.vx)-(Math.PI );
+        if (this.vx === 0 && this.vy === 0) {
+          angle = 0; // Default angle when stationary
+        }
+      }
+
+      // Apply filter to make the image white
+      ctx.filter = "saturate(0%) brightness(500%)";
+
+      // Save context, apply rotation, and draw image
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(angle-Math.PI/2);
+      ctx.drawImage(
+        this.img,
+        -drawWidth / 2,
+        -drawHeight / 2,
+        drawWidth,
+        drawHeight
+      );
+      ctx.restore();
+
+      // Reset filter
+      ctx.filter = "none";
+    } else {
+      // Fallback: Draw a lime circle if image isn't loaded
+      ctx.fillStyle = "lime";
+      ctx.beginPath();
+      ctx.arc(
+        centerX,
+        centerY,
+        this.radius,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
   }
 }
