@@ -264,7 +264,7 @@ export default class Player {
         this.coinsCollected++;
         this.game.coins.splice(this.game.coins.indexOf(coin), 1);
         // Create 8 particles for the coin collection effect
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < 15; i++) {
           const angle = Math.random() * 2 * Math.PI;
           const speed = 1 + Math.random() * 2; // Speed between 1 and 3
           const vx = speed * Math.cos(angle);
