@@ -17,6 +17,7 @@ export default class Player {
     this.lastPlanetY = 0; // Last attached planet's y position
     this.distToPlanet = 0;
     this.startingDistance = 100;
+    this.tetheredPlanet = null; // Track the currently tethered planet
     this.img = new Image();
     this.img.src = "img/rocket.png";
     this.isImageLoaded = false;
@@ -26,6 +27,19 @@ export default class Player {
     this.trailParticles = []; // Array to store trail particles
     this.coinEffectParticles = []; // Array to store coin collection particles
     this.coinsCollected = 0; // Initialize coin counter
+    this.engineSound = new Audio("audio/engine.mp3");
+    this.engineSound.volume = 0.3; // Adjusted for balance
+    this.flingSound = new Audio("audio/fling.mp3");
+    this.flingSound.volume = 0.9;
+    this.latchSound = new Audio("audio/latch.mp3");
+    this.latchSound.volume = 0.8;
+    // Initialize audio pool for coin sound
+    this.coinSoundPool = [];
+    for (let i = 0; i < 5; i++) { // Create 5 Audio objects
+      const audio = new Audio("audio/coin.mp3");
+      audio.volume = 0.7;
+      this.coinSoundPool.push(audio);
+    }
   }
 
   rotateAround(centerPos, distance, deltaTime) {
@@ -43,16 +57,14 @@ export default class Player {
     this.tether.tetherLength = 0;
 
     if (this.game.space) {
-      for (const planet of this.game.background.planets) {
+      if (this.tetheredPlanet) {
+        // Stay attached to the current planet
+        const planet = this.tetheredPlanet;
         const planetX = planet.x - this.game.camX + this.game.canvas.width / 2;
         const planetY = planet.y - this.game.camY + this.game.canvas.height / 2;
         const dx = (this.x - this.game.camX + this.game.canvas.width / 2) - planetX;
         const dy = (this.y - this.game.camY + this.game.canvas.height / 2) - planetY;
         let dist = Math.hypot(dx, dy);
-        ctx.beginPath();
-        ctx.strokeStyle = "orange";
-        ctx.arc(planetX, planetY, 100, 0, Math.PI * 2);
-        // ctx.stroke();
 
         if (dist < 200) {
           dist -= 0.01;
@@ -61,15 +73,15 @@ export default class Player {
           this.tether.tetherEndY = planetY;
           this.tether.tetherLength = dist;
           this.attached = true;
-          this.lastPlanetX = planet.x; // Store planet's world coordinates
+          this.lastPlanetX = planet.x;
           this.lastPlanetY = planet.y;
 
           if (!this.wasAttached) {
+            this.latchSound.currentTime = 0;
+            this.latchSound.play();
             const dxPlayer = this.x - planet.x;
             const dyPlayer = this.y - planet.y;
             this.rotationAngle = Math.atan2(dyPlayer, dxPlayer);
-
-            // Set rotation direction based on incoming velocity
             const radialX = dxPlayer;
             const radialY = dyPlayer;
             const radialLength = Math.hypot(radialX, radialY);
@@ -90,11 +102,78 @@ export default class Player {
             dist,
             this.game.deltaTime
           );
-          break; // Stop checking other planets once attached
+        } else {
+          // Out of range, detach
+          this.tetheredPlanet = null;
+          this.attached = false;
+        }
+      } else {
+        // Find the closest planet within range
+        let closestPlanet = null;
+        let minDist = Infinity;
+
+        for (const planet of this.game.background.planets) {
+          const planetX = planet.x - this.game.camX + this.game.canvas.width / 2;
+          const planetY = planet.y - this.game.camY + this.game.canvas.height / 2;
+          const dx = (this.x - this.game.camX + this.game.canvas.width / 2) - planetX;
+          const dy = (this.y - this.game.camY + this.game.canvas.height / 2) - planetY;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 200 && dist < minDist) {
+            minDist = dist;
+            closestPlanet = planet;
+          }
+        }
+
+        if (closestPlanet) {
+          const planet = closestPlanet;
+          const planetX = planet.x - this.game.camX + this.game.canvas.width / 2;
+          const planetY = planet.y - this.game.camY + this.game.canvas.height / 2;
+          const dx = (this.x - this.game.camX + this.game.canvas.width / 2) - planetX;
+          const dy = (this.y - this.game.camY + this.game.canvas.height / 2) - planetY;
+          let dist = Math.hypot(dx, dy);
+
+          dist -= 0.01;
+          this.distToPlanet = dist;
+          this.tether.tetherEndX = planetX;
+          this.tether.tetherEndY = planetY;
+          this.tether.tetherLength = dist;
+          this.attached = true;
+          this.lastPlanetX = planet.x;
+          this.lastPlanetY = planet.y;
+          this.tetheredPlanet = planet; // Lock onto this planet
+
+          if (!this.wasAttached) {
+            this.latchSound.currentTime = 0;
+            this.latchSound.play();
+            const dxPlayer = this.x - planet.x;
+            const dyPlayer = this.y - planet.y;
+            this.rotationAngle = Math.atan2(dyPlayer, dxPlayer);
+            const radialX = dxPlayer;
+            const radialY = dyPlayer;
+            const radialLength = Math.hypot(radialX, radialY);
+            if (radialLength > 0) {
+              const normRadialX = radialX / radialLength;
+              const normRadialY = radialY / radialLength;
+              const tangentialX = -normRadialY;
+              const tangentialY = normRadialX;
+              const tangentialVelocity = this.vx * tangentialX + this.vy * tangentialY;
+              this.rotationSpeed = 0.06 * (tangentialVelocity >= 0 ? 1 : -1);
+            }
+            this.startingDistance = dist;
+            this.wasAttached = true;
+          }
+
+          this.rotateAround(
+            { x: planet.x - this.game.camX, y: planet.y - this.game.camY },
+            dist,
+            this.game.deltaTime
+          );
         }
       }
     } else if (this.wasAttached && !this.attached) {
       // Detachment moment: calculate fling velocity
+      this.flingSound.currentTime = 0;
+      this.flingSound.play();
       const dx = this.x - this.lastPlanetX;
       const dy = this.y - this.lastPlanetY;
       let flingDx, flingDy;
@@ -107,7 +186,7 @@ export default class Player {
       }
       const length = Math.hypot(flingDx, flingDy);
       if (length > 0) {
-        const flingSpeed = Math.abs(this.rotationSpeed * (this.distToPlanet / 100)) * 70; // Pixels per frame, adjust as needed
+        const flingSpeed = Math.abs(this.rotationSpeed * (this.distToPlanet / 100)) * 70;
         this.vx = (flingDx / length) * flingSpeed;
         this.vy = (flingDy / length) * flingSpeed;
       } else {
@@ -115,6 +194,7 @@ export default class Player {
         this.vy = 0;
       }
       this.wasAttached = false;
+      this.tetheredPlanet = null; // Clear tethered planet on detach
     }
 
     if (!this.attached) {
@@ -133,6 +213,16 @@ export default class Player {
       } else if (this.game.down) {
         this.vy = 3;
       }
+    }
+
+    // Control engine sound
+    if (!this.attached && (this.vx !== 0 || this.vy !== 0)) {
+      if (this.engineSound.paused) {
+        this.engineSound.currentTime = 0;
+        this.engineSound.play();
+      }
+    } else {
+      this.engineSound.pause();
     }
 
     this.game.camX += 0.02 * (this.x - this.game.camX);
@@ -189,7 +279,7 @@ export default class Player {
     const randomOffsetY = (Math.random() - 0.5) * 10;
     const particleWorldX = particleBaseX + randomOffsetX;
     const particleWorldY = particleBaseY + randomOffsetY;
-    const initialSize = 4 + Math.random() * 3; // Random size between 5 and 8
+    const initialSize = 4 + Math.random() * 3; // Random size between 4 and 7
     this.trailParticles.push({
       worldX: particleWorldX,
       worldY: particleWorldY,
@@ -255,7 +345,7 @@ export default class Player {
       ctx.fill();
     }
 
-    // Coin collection logic with particle effect
+    // Coin collection logic with particle effect and sound
     this.game.coins.forEach(coin => {
       const dx = coin.x - this.x;
       const dy = coin.y - this.y;
@@ -263,7 +353,13 @@ export default class Player {
       if (dist < 40) {
         this.coinsCollected++;
         this.game.coins.splice(this.game.coins.indexOf(coin), 1);
-        // Create 8 particles for the coin collection effect
+        // Play coin sound from pool
+        const availableSound = this.coinSoundPool.find(audio => audio.paused || audio.ended);
+        if (availableSound) {
+          availableSound.currentTime = 0;
+          availableSound.play();
+        }
+        // Create 15 particles for the coin collection effect
         for (let i = 0; i < 15; i++) {
           const angle = Math.random() * 2 * Math.PI;
           const speed = 1 + Math.random() * 2; // Speed between 1 and 3
