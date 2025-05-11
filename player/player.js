@@ -157,22 +157,33 @@ export default class Player {
     }
     const facingAngle = angle - Math.PI / 2;
 
-    // Add trail particle
-    const offset = 0; // 20 pixels behind the rocket
-    const particleWorldX = this.x - offset * Math.cos(facingAngle);
-    const particleWorldY = this.y - offset * Math.sin(facingAngle);
-    this.trailParticles.push({ worldX: particleWorldX, worldY: particleWorldY, opacity: 1 });
+    // Add trail particle with randomness
+    const offset = 10; // 20 pixels behind the rocket
+    const particleBaseX = this.x - offset * Math.cos(facingAngle-Math.PI/2);
+    const particleBaseY = this.y - offset * Math.sin(facingAngle-Math.PI/2);
+    const randomOffsetX = (Math.random() - 0.5) * 10; // Random offset within ±5 pixels
+    const randomOffsetY = (Math.random() - 0.5) * 10;
+    const particleWorldX = particleBaseX + randomOffsetX;
+    const particleWorldY = particleBaseY + randomOffsetY;
+    const initialSize = 4 + Math.random() * 3; // Random size between 5 and 8
+    this.trailParticles.push({
+      worldX: particleWorldX,
+      worldY: particleWorldY,
+      opacity: 1,
+      size: initialSize
+    });
 
     // Draw trail particles
     ctx.fillStyle = "orange";
     this.trailParticles = this.trailParticles.filter(particle => {
-      particle.opacity -= 0.05; // Fade out rate
-      if (particle.opacity > 0) {
+      particle.opacity -= 0.03 + Math.random() * 0.02; // Slightly random fade rate
+      particle.size *= 0.95; // Shrink by 5% each frame
+      if (particle.opacity > 0 && particle.size > 0.5) {
         const screenX = particle.worldX - this.game.camX + this.game.canvas.width / 2;
         const screenY = particle.worldY - this.game.camY + this.game.canvas.height / 2;
         ctx.globalAlpha = particle.opacity;
         ctx.beginPath();
-        ctx.arc(screenX, screenY, 5, 0, Math.PI * 2); // Particle size
+        ctx.arc(screenX, screenY, particle.size, 0, Math.PI * 2);
         ctx.fill();
         return true;
       } else {
