@@ -1,5 +1,6 @@
 import Player from './player/player.js';
 import Background from './scene/background.js'
+import Coin from './player/coin.js'
 
 const canvas=document.getElementById("canvas")
 canvas.width=window.innerWidth
@@ -18,15 +19,22 @@ export default class Game{
     this.up=false
     this.down=false
     this.space=false
+    
 
     this.camX=0
     this.camY=0
+    this.coins=[]
+    for(let i=0;i<400;i++){
+      this.coins.push(new Coin(this,getRandomArbitrary(-canvas.width*3,canvas.width*3),getRandomArbitrary(-canvas.height*3,canvas.height*3)))
+    }
     this.player=new Player(0,0,this)
     this.background=new Background(this)
+    
 
     this.addPlayerControls()
     this.planetPosition=[]
     this.deltaTime=0
+
 
   }
   update() {
@@ -49,8 +57,9 @@ export default class Game{
   }
 
   render(ctx){
-
     this.background.draw(ctx)
+    this.coins.forEach(coin=>coin.draw(ctx))
+
     this.player.tether.draw(ctx)
     this.player.draw(ctx)
     

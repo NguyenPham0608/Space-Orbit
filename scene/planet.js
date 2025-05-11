@@ -18,7 +18,7 @@ export default class Planet {
             "img/planet8.png",
             "img/planet9.png"
         ];
-        this.imgSrc = this.imgSrcList[Math.floor(getRandomArbitrary(0, 9))];
+        this.imgSrc = this.imgSrcList[Math.floor(getRandomArbitrary(0, 8))];
         this.img = new Image();
         this.img.src = this.imgSrc;
         this.isImageLoaded = false;

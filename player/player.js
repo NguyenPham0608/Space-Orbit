@@ -230,5 +230,15 @@ export default class Player {
       );
       ctx.fill();
     }
+
+    this.game.coins.forEach(coin => {
+      const dx = coin.x - this.x;
+      const dy = coin.y - this.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 40) {
+        this.coinsCollected++;
+        this.game.coins.splice(this.game.coins.indexOf(coin),1)
+      }
+    })
   }
 }
