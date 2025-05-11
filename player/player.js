@@ -23,6 +23,7 @@ export default class Player {
     this.img.onload = () => {
       this.isImageLoaded = true;
     };
+    this.trailParticles = []; // Array to store trail particles
   }
 
   rotateAround(centerPos, distance, deltaTime) {
@@ -140,35 +141,52 @@ export default class Player {
     const centerX = this.x - this.game.camX + this.game.canvas.width / 2;
     const centerY = this.y - this.game.camY + this.game.canvas.height / 2;
 
+    // Compute angle for trail and drawing
+    let angle;
+    if (this.attached) {
+      const dx = this.lastPlanetX - this.x;
+      const dy = this.lastPlanetY - this.y;
+      const perpX = this.rotationSpeed > 0 ? -dy : dy;
+      const perpY = this.rotationSpeed > 0 ? dx : -dx;
+      angle = Math.atan2(perpY, perpX);
+    } else {
+      angle = Math.atan2(this.vy, this.vx) - Math.PI;
+      if (this.vx === 0 && this.vy === 0) {
+        angle = 0;
+      }
+    }
+    const facingAngle = angle - Math.PI / 2;
+
+    // Add trail particle
+    const offset = 0; // 20 pixels behind the rocket
+    const particleWorldX = this.x - offset * Math.cos(facingAngle);
+    const particleWorldY = this.y - offset * Math.sin(facingAngle);
+    this.trailParticles.push({ worldX: particleWorldX, worldY: particleWorldY, opacity: 1 });
+
+    // Draw trail particles
+    ctx.fillStyle = "orange";
+    this.trailParticles = this.trailParticles.filter(particle => {
+      particle.opacity -= 0.05; // Fade out rate
+      if (particle.opacity > 0) {
+        const screenX = particle.worldX - this.game.camX + this.game.canvas.width / 2;
+        const screenY = particle.worldY - this.game.camY + this.game.canvas.height / 2;
+        ctx.globalAlpha = particle.opacity;
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, 5, 0, Math.PI * 2); // Particle size
+        ctx.fill();
+        return true;
+      } else {
+        return false;
+      }
+    });
+    ctx.globalAlpha = 1; // Reset alpha
+
     // Draw the player image
     if (this.isImageLoaded) {
       const drawWidth = this.radius * 4;
       const drawHeight = this.radius * 4;
-      // Center the image by offsetting the top-left corner
       const drawX = centerX - drawWidth / 2;
       const drawY = centerY - drawHeight / 2;
-
-      let angle = 0;
-
-      // Calculate rotation angle
-      if (this.attached) {
-        // Tether direction: from player to planet
-        const dx = this.lastPlanetX - this.x;
-        const dy = this.lastPlanetY - this.y;
-        // Perpendicular direction based on rotation direction
-        const perpX = this.rotationSpeed > 0 ? -dy : dy;
-        const perpY = this.rotationSpeed > 0 ? dx : -dx;
-        // Compute angle for perpendicular direction
-        const targetAngle = Math.atan2(perpY, perpX);
-        angle += (targetAngle - angle);
-      } else {
-        // Align with velocity when not attached
-        const targetAngle = Math.atan2(this.vy, this.vx) - Math.PI;
-        angle = targetAngle;
-        if (this.vx === 0 && this.vy === 0) {
-          angle = 0; // Default angle when stationary
-        }
-      }
 
       // Apply filter to make the image white
       ctx.filter = "saturate(0%) brightness(500%)";
