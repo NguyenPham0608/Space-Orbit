@@ -16,6 +16,7 @@ export default class Player {
     this.lastPlanetX = 0; // Last attached planet's x position
     this.lastPlanetY = 0; // Last attached planet's y position
     this.distToPlanet = 0;
+    this.startingDistance = 100;
     this.img = new Image();
     this.img.src = "img/rocket.png";
     this.isImageLoaded = false;
@@ -30,6 +31,7 @@ export default class Player {
     const newY = centerPos.y + this.game.camY + distance * Math.sin(this.rotationAngle);
     this.x = newX;
     this.y = newY;
+    console.log(distance);
   }
 
   draw(ctx) {
@@ -39,7 +41,7 @@ export default class Player {
     this.tether.tetherLength = 0;
 
     if (this.game.space) {
-      this.game.background.planets.forEach((planet) => {
+      for (const planet of this.game.background.planets) {
         const planetX = planet.x - this.game.camX + this.game.canvas.width / 2;
         const planetY = planet.y - this.game.camY + this.game.canvas.height / 2;
         const dx = (this.x - this.game.camX + this.game.canvas.width / 2) - planetX;
@@ -50,8 +52,8 @@ export default class Player {
         ctx.arc(planetX, planetY, 100, 0, Math.PI * 2);
         // ctx.stroke();
 
-        if (dist < 100) {
-          dist -= 0.1;
+        if (dist < 200) {
+          dist -= 0.01;
           this.distToPlanet = dist;
           this.tether.tetherEndX = planetX;
           this.tether.tetherEndY = planetY;
@@ -75,8 +77,9 @@ export default class Player {
               const tangentialX = -normRadialY;
               const tangentialY = normRadialX;
               const tangentialVelocity = this.vx * tangentialX + this.vy * tangentialY;
-              this.rotationSpeed = 0.07 * (tangentialVelocity >= 0 ? 1 : -1);
+              this.rotationSpeed = 0.06 * (tangentialVelocity >= 0 ? 1 : -1);
             }
+            this.startingDistance = dist;
             this.wasAttached = true;
           }
 
@@ -85,8 +88,9 @@ export default class Player {
             dist,
             this.game.deltaTime
           );
+          break; // Stop checking other planets once attached
         }
-      });
+      }
     } else if (this.wasAttached && !this.attached) {
       // Detachment moment: calculate fling velocity
       const dx = this.x - this.lastPlanetX;
@@ -101,7 +105,7 @@ export default class Player {
       }
       const length = Math.hypot(flingDx, flingDy);
       if (length > 0) {
-        const flingSpeed = this.distToPlanet / 20; // Pixels per frame, adjust as needed
+        const flingSpeed = Math.abs(this.rotationSpeed * (this.distToPlanet / 100)) * 70; // Pixels per frame, adjust as needed
         this.vx = (flingDx / length) * flingSpeed;
         this.vy = (flingDy / length) * flingSpeed;
       } else {
@@ -144,8 +148,9 @@ export default class Player {
       const drawX = centerX - drawWidth / 2;
       const drawY = centerY - drawHeight / 2;
 
+      let angle = 0;
+
       // Calculate rotation angle
-      let angle;
       if (this.attached) {
         // Tether direction: from player to planet
         const dx = this.lastPlanetX - this.x;
@@ -154,10 +159,12 @@ export default class Player {
         const perpX = this.rotationSpeed > 0 ? -dy : dy;
         const perpY = this.rotationSpeed > 0 ? dx : -dx;
         // Compute angle for perpendicular direction
-        angle = Math.atan2(perpY, perpX);
+        const targetAngle = Math.atan2(perpY, perpX);
+        angle += (targetAngle - angle);
       } else {
         // Align with velocity when not attached
-        angle = Math.atan2(this.vy, this.vx)-(Math.PI );
+        const targetAngle = Math.atan2(this.vy, this.vx) - Math.PI;
+        angle = targetAngle;
         if (this.vx === 0 && this.vy === 0) {
           angle = 0; // Default angle when stationary
         }
@@ -169,7 +176,7 @@ export default class Player {
       // Save context, apply rotation, and draw image
       ctx.save();
       ctx.translate(centerX, centerY);
-      ctx.rotate(angle-Math.PI/2);
+      ctx.rotate(angle - Math.PI / 2);
       ctx.drawImage(
         this.img,
         -drawWidth / 2,
