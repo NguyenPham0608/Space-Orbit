@@ -33,8 +33,8 @@ export default class Planet {
         this.dyPlayer = this.y - this.player.y;
 
         // Calculate planet's center position relative to camera and canvas
-        const centerX = this.x - this.game.camX + (this.game.canvas.width / 2);
-        const centerY = this.y - this.game.camY + (this.game.canvas.height / 2);
+        const centerX = this.x - this.game.camX + (window.innerWidth / 2);
+        const centerY = this.y - this.game.camY + (window.innerHeight / 2);
 
         // Draw the planet image only if it's loaded
         if (this.isImageLoaded) {

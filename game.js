@@ -12,8 +12,8 @@ const ctx=canvas.getContext("2d")
 const scale = window.devicePixelRatio || 1;
 
 // Set the canvas width/height to be higher resolution
-canvas.width = window.innerWidth * scale;
-canvas.height = window.innerHeight * scale;
+canvas.width = window.innerWidth * scale*1;
+canvas.height = window.innerHeight * scale*1;
 ctx.scale(scale, scale);
 
 ctx.imageSmoothingEnabled = true;

@@ -26,25 +26,26 @@ export default class Background {
   }
 
   draw(ctx) {
-    this.camX = this.game.camX/2;
-    this.camY = this.game.camY/2;
+
 
     // Draw the starfield background
     if (this.isStarImgLoaded) {
-      const imgWidth = this.starImg.width;
-      const imgHeight = this.starImg.height;
+      this.camX = this.game.camX/2;
+      this.camY = this.game.camY/2;
+      let imgWidth = this.starImg.width*2;
+      let imgHeight = this.starImg.height*2;
 
       // Calculate camera offset with modulo to loop the background
-      const offsetX = (-this.camX) % imgWidth;
-      const offsetY = (-this.camY) % imgHeight;
+      let offsetX = (-this.camX) % imgWidth;
+      let offsetY = (-this.camY) % imgHeight;
 
       // Calculate the number of tiles needed to cover the canvas
-      const canvasWidth = this.game.canvas.width;
-      const canvasHeight = this.game.canvas.height;
-      const startX = Math.floor(-offsetX / imgWidth) - 1;
-      const startY = Math.floor(-offsetY / imgHeight) - 1;
-      const endX = Math.ceil((canvasWidth - offsetX) / imgWidth) + 1;
-      const endY = Math.ceil((canvasHeight - offsetY) / imgHeight) + 1;
+      let canvasWidth = window.innerWidth;
+      let canvasHeight = window.innerHeight;
+      let startX = Math.floor(-offsetX / imgWidth) - 1;
+      let startY = Math.floor(-offsetY / imgHeight) - 1;
+      let endX = Math.ceil((canvasWidth - offsetX) / imgWidth) + 1;
+      let endY = Math.ceil((canvasHeight - offsetY) / imgHeight) + 1;
 
       // Draw tiled star images
       for (let i = startX; i < endX; i++) {

@@ -52,18 +52,18 @@ export default class Player {
 
   draw(ctx) {
     this.attached = false;
-    this.tether.tetherEndX = this.x - this.game.camX + this.game.canvas.width / 2;
-    this.tether.tetherEndY = this.y - this.game.camY + this.game.canvas.height / 2;
+    this.tether.tetherEndX = this.x - this.game.camX + window.innerWidth / 2;
+    this.tether.tetherEndY = this.y - this.game.camY + window.innerHeight / 2;
     this.tether.tetherLength = 0;
 
     if (this.game.space) {
       if (this.tetheredPlanet) {
         // Stay attached to the current planet
         const planet = this.tetheredPlanet;
-        const planetX = planet.x - this.game.camX + this.game.canvas.width / 2;
-        const planetY = planet.y - this.game.camY + this.game.canvas.height / 2;
-        const dx = (this.x - this.game.camX + this.game.canvas.width / 2) - planetX;
-        const dy = (this.y - this.game.camY + this.game.canvas.height / 2) - planetY;
+        const planetX = planet.x - this.game.camX + window.innerWidth / 2;
+        const planetY = planet.y - this.game.camY + window.innerHeight / 2;
+        const dx = (this.x - this.game.camX + window.innerWidth / 2) - planetX;
+        const dy = (this.y - this.game.camY + window.innerHeight / 2) - planetY;
         let dist = Math.hypot(dx, dy);
 
         if (dist < 200) {
@@ -113,10 +113,10 @@ export default class Player {
         let minDist = Infinity;
 
         for (const planet of this.game.background.planets) {
-          const planetX = planet.x - this.game.camX + this.game.canvas.width / 2;
-          const planetY = planet.y - this.game.camY + this.game.canvas.height / 2;
-          const dx = (this.x - this.game.camX + this.game.canvas.width / 2) - planetX;
-          const dy = (this.y - this.game.camY + this.game.canvas.height / 2) - planetY;
+          const planetX = planet.x - this.game.camX + window.innerWidth / 2;
+          const planetY = planet.y - this.game.camY + window.innerHeight / 2;
+          const dx = (this.x - this.game.camX + window.innerWidth / 2) - planetX;
+          const dy = (this.y - this.game.camY + window.innerHeight / 2) - planetY;
           const dist = Math.hypot(dx, dy);
           if (dist < 200 && dist < minDist) {
             minDist = dist;
@@ -126,10 +126,10 @@ export default class Player {
 
         if (closestPlanet) {
           const planet = closestPlanet;
-          const planetX = planet.x - this.game.camX + this.game.canvas.width / 2;
-          const planetY = planet.y - this.game.camY + this.game.canvas.height / 2;
-          const dx = (this.x - this.game.camX + this.game.canvas.width / 2) - planetX;
-          const dy = (this.y - this.game.camY + this.game.canvas.height / 2) - planetY;
+          const planetX = planet.x - this.game.camX + window.innerWidth / 2;
+          const planetY = planet.y - this.game.camY + window.innerHeight / 2;
+          const dx = (this.x - this.game.camX + window.innerWidth / 2) - planetX;
+          const dy = (this.y - this.game.camY + window.innerHeight / 2) - planetY;
           let dist = Math.hypot(dx, dy);
 
           dist -= 0.01;
@@ -222,8 +222,8 @@ export default class Player {
     this.game.camY += 0.02 * (this.y - this.game.camY);
 
     // Calculate player's center position
-    const centerX = this.x - this.game.camX + this.game.canvas.width / 2;
-    const centerY = this.y - this.game.camY + this.game.canvas.height / 2;
+    const centerX = this.x - this.game.camX + window.innerWidth / 2;
+    const centerY = this.y - this.game.camY + window.innerHeight / 2;
 
     // Draw coin effect particles (before player for layering)
     ctx.fillStyle = "gold";
@@ -235,8 +235,8 @@ export default class Player {
       particle.opacity -= 0.05; // Fade out
       particle.size *= 0.95; // Shrink
       if (particle.opacity > 0 && particle.size > 0.1) {
-        const screenX = particle.worldX - this.game.camX + this.game.canvas.width / 2;
-        const screenY = particle.worldY - this.game.camY + this.game.canvas.height / 2;
+        const screenX = particle.worldX - this.game.camX + window.innerWidth / 2;
+        const screenY = particle.worldY - this.game.camY + window.innerHeight / 2;
         ctx.globalAlpha = particle.opacity;
         ctx.beginPath();
         ctx.arc(screenX, screenY, particle.size, 0, Math.PI * 2);
@@ -286,8 +286,8 @@ export default class Player {
       particle.opacity -= 0.03 + Math.random() * 0.02; // Slightly random fade rate
       particle.size *= 0.95; // Shrink by 5% each frame
       if (particle.opacity > 0 && particle.size > 0.5) {
-        const screenX = particle.worldX - this.game.camX + this.game.canvas.width / 2;
-        const screenY = particle.worldY - this.game.camY + this.game.canvas.height / 2;
+        const screenX = particle.worldX - this.game.camX + window.innerWidth / 2;
+        const screenY = particle.worldY - this.game.camY + window.innerHeight / 2;
         ctx.globalAlpha = particle.opacity;
         ctx.beginPath();
         ctx.arc(screenX, screenY, particle.size, 0, Math.PI * 2);

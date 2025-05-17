@@ -10,7 +10,7 @@ export default class Tether{
       ctx.beginPath()
       ctx.strokeStyle="red"
       ctx.lineWidth=3
-      ctx.moveTo(this.player.x+this.game.canvas.width/2 - this.game.camX, this.player.y+this.game.canvas.height/2 - this.game.camY)
+      ctx.moveTo(this.player.x+window.innerWidth/2 - this.game.camX, this.player.y+window.innerHeight/2 - this.game.camY)
       ctx.lineTo(this.tetherEndX,this.tetherEndY)
       ctx.stroke()
     }
