@@ -78,7 +78,9 @@ export default class Game{
     this.background.draw(ctx)
     this.coins.forEach(coin=>coin.draw(ctx))
 
+    this.player.update()
     this.player.tether.draw(ctx)
+    
     this.player.draw(ctx)
     
   }

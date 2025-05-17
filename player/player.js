@@ -24,6 +24,7 @@ export default class Player {
     this.img.onload = () => {
       this.isImageLoaded = true;
     };
+    this.destroyed = false;
     this.trailParticles = []; // Array to store trail particles
     this.coinEffectParticles = []; // Array to store coin collection particles
     this.coinsCollected = 0; // Initialize coin counter
@@ -40,6 +41,7 @@ export default class Player {
       audio.volume = 0.7;
       this.coinSoundPool.push(audio);
     }
+    this.angle = 0; // Store the player's facing angle
   }
 
   rotateAround(centerPos, distance, deltaTime) {
@@ -50,12 +52,14 @@ export default class Player {
     this.y = newY;
   }
 
-  draw(ctx) {
+  update() {
+    // Reset attachment state and tether properties
     this.attached = false;
     this.tether.tetherEndX = this.x - this.game.camX + window.innerWidth / 2;
     this.tether.tetherEndY = this.y - this.game.camY + window.innerHeight / 2;
     this.tether.tetherLength = 0;
 
+    // Attachment logic
     if (this.game.space) {
       if (this.tetheredPlanet) {
         // Stay attached to the current planet
@@ -67,7 +71,12 @@ export default class Player {
         let dist = Math.hypot(dx, dy);
 
         if (dist < 200) {
-          dist -= 0.01;
+          if (dist < planet.radius - planet.radius / 2) {
+            if (Math.abs(this.vx) > 3 || Math.abs(this.vy) > 3) {
+              this.destroyed = true;
+            }
+          }
+          dist -= 0.5;
           this.distToPlanet = dist;
           this.tether.tetherEndX = planetX;
           this.tether.tetherEndY = planetY;
@@ -140,7 +149,7 @@ export default class Player {
           this.attached = true;
           this.lastPlanetX = planet.x;
           this.lastPlanetY = planet.y;
-          this.tetheredPlanet = planet; // Lock onto this planet
+          this.tetheredPlanet = planet;
 
           if (!this.wasAttached) {
             this.latchSound.currentTime = 0;
@@ -171,17 +180,17 @@ export default class Player {
         }
       }
     } else if (this.wasAttached && !this.attached) {
-      // Detachment moment: calculate fling velocity
+      // Detachment logic: calculate fling velocity
       this.flingSound.currentTime = 0;
       this.flingSound.play();
       const dx = this.x - this.lastPlanetX;
       const dy = this.y - this.lastPlanetY;
       let flingDx, flingDy;
       if (this.rotationSpeed > 0) {
-        flingDx = -dy; // Counterclockwise: left perpendicular
+        flingDx = -dy; // Counterclockwise
         flingDy = dx;
       } else {
-        flingDx = dy; // Clockwise: right perpendicular
+        flingDx = dy; // Clockwise
         flingDy = -dx;
       }
       const length = Math.hypot(flingDx, flingDy);
@@ -194,15 +203,14 @@ export default class Player {
         this.vy = 0;
       }
       this.wasAttached = false;
-      this.tetheredPlanet = null; // Clear tethered planet on detach
+      this.tetheredPlanet = null;
     }
 
+    // Free movement and input handling
     if (!this.attached) {
-      // Free movement: update position and handle input
       this.x += this.vx;
       this.y += this.vy;
 
-      // Update velocity only if input is provided
       if (this.game.left) {
         this.vx = -3;
       } else if (this.game.right) {
@@ -215,64 +223,34 @@ export default class Player {
       }
     }
 
-    // Control engine sound
-
-
+    // Update camera position
     this.game.camX += 0.02 * (this.x - this.game.camX);
     this.game.camY += 0.02 * (this.y - this.game.camY);
 
-    // Calculate player's center position
-    const centerX = this.x - this.game.camX + window.innerWidth / 2;
-    const centerY = this.y - this.game.camY + window.innerHeight / 2;
-
-    // Draw coin effect particles (before player for layering)
-    ctx.fillStyle = "gold";
-    this.coinEffectParticles = this.coinEffectParticles.filter(particle => {
-      particle.worldX += particle.vx;
-      particle.worldY += particle.vy;
-      particle.vx *= 0.95; // Slow down over time
-      particle.vy *= 0.95;
-      particle.opacity -= 0.05; // Fade out
-      particle.size *= 0.95; // Shrink
-      if (particle.opacity > 0 && particle.size > 0.1) {
-        const screenX = particle.worldX - this.game.camX + window.innerWidth / 2;
-        const screenY = particle.worldY - this.game.camY + window.innerHeight / 2;
-        ctx.globalAlpha = particle.opacity;
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, particle.size, 0, Math.PI * 2);
-        ctx.fill();
-        return true;
-      } else {
-        return false;
-      }
-    });
-    ctx.globalAlpha = 1; // Reset alpha
-
-    // Compute angle for trail and drawing
-    let angle;
+    // Calculate and store angle for particle positioning and drawing
     if (this.attached) {
       const dx = this.lastPlanetX - this.x;
       const dy = this.lastPlanetY - this.y;
       const perpX = this.rotationSpeed > 0 ? -dy : dy;
       const perpY = this.rotationSpeed > 0 ? dx : -dx;
-      angle = Math.atan2(perpY, perpX);
+      this.angle = Math.atan2(perpY, perpX);
     } else {
-      angle = Math.atan2(this.vy, this.vx) - Math.PI;
       if (this.vx === 0 && this.vy === 0) {
-        angle = 0;
+        this.angle = 0;
+      } else {
+        this.angle = Math.atan2(this.vy, this.vx) - Math.PI;
       }
     }
-    const facingAngle = angle - Math.PI / 2;
 
-    // Add trail particle with randomness
-    const offset = 10; // 20 pixels behind the rocket
-    const particleBaseX = this.x - offset * Math.cos(facingAngle - Math.PI / 2);
-    const particleBaseY = this.y - offset * Math.sin(facingAngle - Math.PI / 2);
-    const randomOffsetX = (Math.random() - 0.5) * 10; // Random offset within ±5 pixels
+    // Add trail particle
+    const offset = 10;
+    const particleBaseX = this.x + offset * Math.cos(this.angle);
+    const particleBaseY = this.y + offset * Math.sin(this.angle);
+    const randomOffsetX = (Math.random() - 0.5) * 10;
     const randomOffsetY = (Math.random() - 0.5) * 10;
     const particleWorldX = particleBaseX + randomOffsetX;
     const particleWorldY = particleBaseY + randomOffsetY;
-    const initialSize = 4 + Math.random() * 3; // Random size between 4 and 7
+    const initialSize = 4 + Math.random() * 3;
     this.trailParticles.push({
       worldX: particleWorldX,
       worldY: particleWorldY,
@@ -280,65 +258,25 @@ export default class Player {
       size: initialSize
     });
 
-    // Draw trail particles
-    ctx.fillStyle = "orange";
+    // Update trail particles
     this.trailParticles = this.trailParticles.filter(particle => {
-      particle.opacity -= 0.03 + Math.random() * 0.02; // Slightly random fade rate
-      particle.size *= 0.95; // Shrink by 5% each frame
-      if (particle.opacity > 0 && particle.size > 0.5) {
-        const screenX = particle.worldX - this.game.camX + window.innerWidth / 2;
-        const screenY = particle.worldY - this.game.camY + window.innerHeight / 2;
-        ctx.globalAlpha = particle.opacity;
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, particle.size, 0, Math.PI * 2);
-        ctx.fill();
-        return true;
-      } else {
-        return false;
-      }
+      particle.opacity -= 0.03 + Math.random() * 0.02;
+      particle.size *= 0.95;
+      return particle.opacity > 0 && particle.size > 0.5;
     });
-    ctx.globalAlpha = 1; // Reset alpha
 
-    // Draw the player image
-    if (this.isImageLoaded) {
-      const drawWidth = this.radius * 4;
-      const drawHeight = this.radius * 4;
-      const drawX = centerX - drawWidth / 2;
-      const drawY = centerY - drawHeight / 2;
+    // Update coin effect particles
+    this.coinEffectParticles = this.coinEffectParticles.filter(particle => {
+      particle.worldX += particle.vx;
+      particle.worldY += particle.vy;
+      particle.vx *= 0.95;
+      particle.vy *= 0.95;
+      particle.opacity -= 0.02;
+      particle.size *= 0.95;
+      return particle.opacity > 0 && particle.size > 0.1;
+    });
 
-      // Apply filter to make the image white
-      ctx.filter = "saturate(0%) brightness(500%)";
-
-      // Save context, apply rotation, and draw image
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate(angle - Math.PI / 2);
-      ctx.drawImage(
-        this.img,
-        -drawWidth / 2,
-        -drawHeight / 2,
-        drawWidth,
-        drawHeight
-      );
-      ctx.restore();
-
-      // Reset filter
-      ctx.filter = "none";
-    } else {
-      // Fallback: Draw a lime circle if image isn't loaded
-      ctx.fillStyle = "lime";
-      ctx.beginPath();
-      ctx.arc(
-        centerX,
-        centerY,
-        this.radius,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-    }
-
-    // Coin collection logic with particle effect and sound
+    // Coin collection logic
     this.game.coins.forEach(coin => {
       const dx = coin.x - this.x;
       const dy = coin.y - this.y;
@@ -346,16 +284,14 @@ export default class Player {
       if (dist < 40) {
         this.coinsCollected++;
         this.game.coins.splice(this.game.coins.indexOf(coin), 1);
-        // Play coin sound from pool
         const availableSound = this.coinSoundPool.find(audio => audio.paused || audio.ended);
         if (availableSound) {
           availableSound.currentTime = 0;
           availableSound.play();
         }
-        // Create 15 particles for the coin collection effect
         for (let i = 0; i < 15; i++) {
           const angle = Math.random() * 2 * Math.PI;
-          const speed = 1 + Math.random() * 2; // Speed between 1 and 3
+          const speed = 1 + Math.random() * 2;
           const vx = speed * Math.cos(angle);
           const vy = speed * Math.sin(angle);
           this.coinEffectParticles.push({
@@ -369,5 +305,62 @@ export default class Player {
         }
       }
     });
+  }
+
+  draw(ctx) {
+    // Calculate player's center position
+    const centerX = this.x - this.game.camX + window.innerWidth / 2;
+    const centerY = this.y - this.game.camY + window.innerHeight / 2;
+
+    // Draw coin effect particles
+    ctx.fillStyle = "gold";
+    this.coinEffectParticles.forEach(particle => {
+      const screenX = particle.worldX - this.game.camX + window.innerWidth / 2;
+      const screenY = particle.worldY - this.game.camY + window.innerHeight / 2;
+      ctx.globalAlpha = particle.opacity;
+      ctx.beginPath();
+      ctx.arc(screenX, screenY, particle.size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    // Draw trail particles
+    ctx.fillStyle = "orange";
+    this.trailParticles.forEach(particle => {
+      const screenX = particle.worldX - this.game.camX + window.innerWidth / 2;
+      const screenY = particle.worldY - this.game.camY + window.innerHeight / 2;
+      ctx.globalAlpha = particle.opacity;
+      ctx.beginPath();
+      ctx.arc(screenX, screenY, particle.size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    // Draw the player image
+    if (this.isImageLoaded) {
+      const drawWidth = this.radius * 4;
+      const drawHeight = this.radius * 4;
+      const drawX = centerX - drawWidth / 2;
+      const drawY = centerY - drawHeight / 2;
+
+      ctx.filter = "saturate(0%) brightness(500%)";
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(this.angle - Math.PI / 2);
+      ctx.drawImage(
+        this.img,
+        -drawWidth / 2,
+        -drawHeight / 2,
+        drawWidth,
+        drawHeight
+      );
+      ctx.restore();
+      ctx.filter = "none";
+    } else {
+      ctx.fillStyle = "lime";
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, this.radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }

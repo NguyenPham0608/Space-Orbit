@@ -5,13 +5,14 @@ export default class Background {
     this.game = game;
     this.camX = this.game.camX;
     this.camY = this.game.camY;
-    this.numPlanets = 50;
+    this.numPlanets = 300;
     this.planets = [];
+    this.scaleFactor=1.2
     for (let i = 0; i < this.numPlanets; i++) {
       this.planets.push(
         new Planet(
-          getRandomArbitrary(-1000, 1000)*2,
-          getRandomArbitrary(-1000, 1000)*2,
+          getRandomArbitrary(-5000, 5000)*this.scaleFactor,
+          getRandomArbitrary(-5000, 5000)*this.scaleFactor,
           getRandomArbitrary(20, 60),
           this.game
         )
