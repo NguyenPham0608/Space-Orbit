@@ -76,7 +76,7 @@ export default class Player {
               this.destroyed = true;
             }
           }
-          dist -= 0.5;
+          dist -= 0.3;
           this.distToPlanet = dist;
           this.tether.tetherEndX = planetX;
           this.tether.tetherEndY = planetY;
@@ -289,7 +289,7 @@ export default class Player {
           availableSound.currentTime = 0;
           availableSound.play();
         }
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 25; i++) {
           const angle = Math.random() * 2 * Math.PI;
           const speed = 1 + Math.random() * 2;
           const vx = speed * Math.cos(angle);

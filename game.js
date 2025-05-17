@@ -24,7 +24,7 @@ ctx.imageSmoothingQuality = "high";
 canvas.style.width = window.innerWidth + "px";
 canvas.style.height = window.innerHeight + "px";
 
-
+const message=document.getElementById("message1")
 
 
 export default class Game{
@@ -41,6 +41,8 @@ export default class Game{
 
     this.camX=0
     this.camY=0
+    this.intro=true
+
     this.coins=[]
     for(let i=0;i<400;i++){
       this.coins.push(new Coin(this,getRandomArbitrary(-canvas.width*3,canvas.width*3),getRandomArbitrary(-canvas.height*3,canvas.height*3)))
@@ -52,7 +54,6 @@ export default class Game{
     this.addPlayerControls()
     this.planetPosition=[]
     this.deltaTime=0
-
 
   }
   update() {
@@ -75,6 +76,7 @@ export default class Game{
   }
 
   render(ctx){
+    if(!this.intro){
     this.background.draw(ctx)
     this.coins.forEach(coin=>coin.draw(ctx))
 
@@ -82,6 +84,7 @@ export default class Game{
     this.player.tether.draw(ctx)
     
     this.player.draw(ctx)
+    }
     
   }
   addPlayerControls(){
