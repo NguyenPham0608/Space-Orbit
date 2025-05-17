@@ -216,14 +216,7 @@ export default class Player {
     }
 
     // Control engine sound
-    if (!this.attached && (this.vx !== 0 || this.vy !== 0)) {
-      if (this.engineSound.paused) {
-        this.engineSound.currentTime = 0;
-        this.engineSound.play();
-      }
-    } else {
-      this.engineSound.pause();
-    }
+
 
     this.game.camX += 0.02 * (this.x - this.game.camX);
     this.game.camY += 0.02 * (this.y - this.game.camY);

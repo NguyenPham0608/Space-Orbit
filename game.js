@@ -8,6 +8,24 @@ canvas.height=window.innerHeight
 const ctx=canvas.getContext("2d")
 
 
+// Get the actual pixel ratio of the display
+const scale = window.devicePixelRatio || 1;
+
+// Set the canvas width/height to be higher resolution
+canvas.width = window.innerWidth * scale;
+canvas.height = window.innerHeight * scale;
+ctx.scale(scale, scale);
+
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = "high";
+
+
+// THEN, set the CSS size so it looks the same on screen
+canvas.style.width = window.innerWidth + "px";
+canvas.style.height = window.innerHeight + "px";
+
+
+
 
 export default class Game{
   constructor(){
