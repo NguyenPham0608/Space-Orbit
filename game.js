@@ -24,7 +24,11 @@ ctx.imageSmoothingQuality = "high";
 canvas.style.width = window.innerWidth + "px";
 canvas.style.height = window.innerHeight + "px";
 
-const message=document.getElementById("message1")
+const message1=document.getElementById("message1")
+const message2=document.getElementById("message2")
+const message3=document.getElementById("message3")
+const blackout=document.getElementById("blackout")
+
 
 
 export default class Game{
@@ -147,6 +151,84 @@ function loop(timestamp){
 
 
   requestAnimationFrame(loop);
+}
+
+window.addEventListener("click", function(e){
+  if(message1.classList.contains("message")){
+    // zipOffScreen(message1)
+    message1.classList.remove("message")
+    message1.classList.add("hidden")
+  }
+  else if(message2.classList.contains("message")){
+    message2.classList.remove("message")
+    message2.classList.add("hidden")
+  } else {
+    message3.classList.remove("message")
+    message3.classList.add("hidden")
+    blackout.style.opacity=0
+    game.intro=false
+  }
+})
+
+function zipOffScreen(element, options = {}) {
+    // Default options
+    const config = {
+        duration: 0.5, // Animation duration in seconds
+        distanceMultiplier: 1.5, // How far the element travels
+        rotate: false, // Whether to rotate during movement
+        rotationAngle: 360, // Rotation angle in degrees if rotate is true
+        easing: 'ease-out', // CSS easing function
+        ...options
+    };
+
+    // Ensure element exists
+    if (!(element instanceof HTMLElement)) {
+        console.error('zipOffScreen: Invalid element provided');
+        return;
+    }
+
+    // Apply transition for smooth animation
+    element.style.transition = `transform ${config.duration}s ${config.easing}`;
+
+    // Add click event listener to the document
+    const handler = () => {
+        // Get window dimensions
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        // Generate random direction (angle in degrees)
+        const angle = Math.random() * 360;
+
+        // Convert angle to radians
+        const radians = angle * (Math.PI / 180);
+
+        // Calculate distance to ensure element goes off-screen
+        const distance = Math.max(windowWidth, windowHeight) * config.distanceMultiplier;
+
+        // Calculate velocity components
+        const velocityX = Math.cos(radians) * distance;
+        const velocityY = Math.sin(radians) * distance;
+
+        // Build transform string
+        let transform = `translate(${velocityX}px, ${velocityY}px)`;
+        if (config.rotate) {
+            transform += ` rotate(${config.rotationAngle}deg)`;
+        }
+
+        // Apply transform
+        element.style.transform = transform;
+
+        // Hide element after animation
+        setTimeout(() => {
+            element.style.display = 'none';
+        }, config.duration * 1000);
+
+        // Remove event listener after animation
+        document.removeEventListener('click', handler);
+    };
+
+    // Attach event listener
+    document.addEventListener('click', handler);
 }
 
 loop()

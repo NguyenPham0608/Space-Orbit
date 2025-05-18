@@ -2,10 +2,11 @@ body {
     background: #000;
     font-family:comfortaa;
     overflow:hidden;
-    transition: all 0.5s;
+    transition: 3s all;
 }
   
-#message1 {
+.message {
+    user-select: none;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -13,13 +14,27 @@ body {
     text-align: center;
     font-size: 19px;
     width: 300px;
-    height: auto;
+    height: 200px;
     line-height: 27px;
     color: #000;
     background-color: #fff;
     border-radius: 10px;
-    padding: 25px;
+    padding: 35px;
     margin: 20px;
-    box-shadow: 0px 0px 20px rgba(246, 255, 0, 0.5);
-    
+    transition: transform 0.5s ease-out; /* Smooth animation */
+}
+.blackout{
+    user-select: none;
+    opacity: 1;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #000;
+    transition: 3s all;
+}
+
+.hidden {
+    display: none;
 }

@@ -16,10 +16,12 @@ export default class Coin {
         this.img.onload = () => {
             this.isImageLoaded = true;
         };
+        this.time=getRandomArbitrary(0, 1000);
     }
     draw(ctx) {
-        const centerX = this.x - this.game.camX + window.innerWidth / 2;
-        const centerY = this.y - this.game.camY + window.innerHeight / 2;
+        this.time++
+        const centerX = this.x - this.game.camX + window.innerWidth / 2; 
+        const centerY = 10*Math.sin(this.time/20)+this.y - this.game.camY + window.innerHeight / 2;
         if (this.isImageLoaded) {
             const scaledWidth = this.img.width / 16;
             const scaledHeight = this.img.height / 16;
