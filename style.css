@@ -5,6 +5,14 @@ body {
     transition: 3s all;
 }
   
+#progress{
+    margin: 20px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 100;
+
+}
 .message {
     user-select: none;
     position: absolute;

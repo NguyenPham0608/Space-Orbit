@@ -30,7 +30,7 @@ export default class Player {
     this.coinsCollected = 0; // Initialize coin counter
     this.engineSound = new Audio("audio/engine.mp3");
     this.engineSound.volume = 0.3; // Adjusted for balance
-    this.flingSound = new Audio("audio/fling.mp3");
+    this.flingSound = new Audio("audio/dddd.mp3");
     this.flingSound.volume = 0.9;
     this.latchSound = new Audio("audio/latch.mp3");
     this.latchSound.volume = 0.8;
