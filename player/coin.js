@@ -52,7 +52,7 @@ export default class Coin {
         }
         if(this.attracted){
             this.attractedTime++
-            if(this.attractedTime<200){
+            if(this.attractedTime<400){
                 const dx=this.x-this.game.player.x
                 const dy=this.y-this.game.player.y
                 const dist=Math.hypot(dx,dy)

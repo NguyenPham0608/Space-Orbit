@@ -13,6 +13,25 @@ body {
     z-index: 100;
 
 }
+#link{
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 10px;
+    z-index: 100;
+    transition: 0.5s all;
+}
+
+#link:hover{
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #009dff;
+    text-decoration: none;
+    z-index: 100;
+}
 .message {
     user-select: none;
     position: absolute;
