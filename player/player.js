@@ -3,6 +3,7 @@ import Tether from "./tether.js";
 export default class Player {
   constructor(x, y, game) {
     this.game = game;
+    this.started=false
     this.x = x;
     this.y = y;
     this.vx = 0; // Velocity in x-direction (pixels per frame)
@@ -42,6 +43,8 @@ export default class Player {
       this.coinSoundPool.push(audio);
     }
     this.angle = 0; // Store the player's facing angle
+    this.collectedScraps=0
+
   }
 
   rotateAround(centerPos, distance, deltaTime) {
@@ -211,15 +214,21 @@ export default class Player {
       this.x += this.vx;
       this.y += this.vy;
 
-      if (this.game.left) {
-        this.vx = -3;
-      } else if (this.game.right) {
-        this.vx = 3;
-      }
-      if (this.game.up) {
-        this.vy = -3;
-      } else if (this.game.down) {
-        this.vy = 3;
+      if(!this.started){
+        if (this.game.left) {
+          this.vx = -3;
+          this.started=true
+        } else if (this.game.right) {
+          this.vx = 3;
+          this.started=true
+        }
+        if (this.game.up) {
+          this.vy = -3;
+          this.started=true
+        } else if (this.game.down) {
+          this.vy = 3;
+          this.started=true
+        }
       }
     }
 
@@ -282,31 +291,67 @@ export default class Player {
       const dy = coin.y - this.y;
       const dist = Math.hypot(dx, dy);
       if (dist < 40) {
-        this.coinsCollected++;
-        this.game.coins.splice(this.game.coins.indexOf(coin), 1);
-        const availableSound = this.coinSoundPool.find(audio => audio.paused || audio.ended);
-        if (availableSound) {
-          availableSound.currentTime = 0;
-          availableSound.play();
-        }
-        for (let i = 0; i < 25; i++) {
-          const angle = Math.random() * 2 * Math.PI;
-          const speed = 1 + Math.random() * 2;
-          const vx = speed * Math.cos(angle);
-          const vy = speed * Math.sin(angle);
-          this.coinEffectParticles.push({
-            worldX: coin.x,
-            worldY: coin.y,
-            vx: vx,
-            vy: vy,
-            opacity: 1,
-            size: 3
-          });
+        if(coin.power){
+          this.coinsCollected+=5;
+          this.game.coins.splice(this.game.coins.indexOf(coin), 1);
+          this.attractScraps()
+          const availableSound = this.coinSoundPool.find(audio => audio.paused || audio.ended);
+          if (availableSound) {
+            availableSound.currentTime = 0;
+            availableSound.play();
+          }
+
+          for (let i = 0; i < 25; i++) {
+            const angle = Math.random() * 2 * Math.PI;
+            const speed = 1 + Math.random() * 2;
+            const vx = speed * Math.cos(angle);
+            const vy = speed * Math.sin(angle);
+            this.coinEffectParticles.push({
+              worldX: coin.x,
+              worldY: coin.y,
+              vx: vx,
+              vy: vy,
+              opacity: 1,
+              size: 3
+            });
+          }
+        }else{
+          this.coinsCollected+=5;
+          this.game.setProgress(this.coinsCollected);
+          this.game.coins.splice(this.game.coins.indexOf(coin), 1);
+          const availableSound = this.coinSoundPool.find(audio => audio.paused || audio.ended);
+          if (availableSound) {
+            availableSound.currentTime = 0;
+            availableSound.play();
+          }
+          for (let i = 0; i < 25; i++) {
+            const angle = Math.random() * 2 * Math.PI;
+            const speed = 1 + Math.random() * 2;
+            const vx = speed * Math.cos(angle);
+            const vy = speed * Math.sin(angle);
+            this.coinEffectParticles.push({
+              worldX: coin.x,
+              worldY: coin.y,
+              vx: vx,
+              vy: vy,
+              opacity: 1,
+              size: 3
+            });
+          }
         }
       }
     });
   }
-
+  attractScraps(){
+    this.game.coins.forEach(coin => {
+      if(!coin.power){
+        const dx = coin.x - this.x;
+        const dy = coin.y - this.y;
+        const dist = Math.hypot(dx, dy);
+        coin.attracted=true
+      }
+    })
+  }
   draw(ctx) {
     // Calculate player's center position
     const centerX = this.x - this.game.camX + window.innerWidth / 2;

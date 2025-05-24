@@ -50,17 +50,16 @@ export default class Game{
     this.currentProgress=0
     this.targetProgress=100
     this.coins=[]
-    for(let i=0;i<400;i++){
+    for(let i=0;i<800;i++){
       this.coins.push(new Coin(this,getRandomArbitrary(-canvas.width*3,canvas.width*3),getRandomArbitrary(-canvas.height*3,canvas.height*3)))
     }
     this.player=new Player(0,0,this)
     this.background=new Background(this)
-    const parent = document.getElementById('progress');
-    this.progressBar = new ImageProgressBar('img/rocket.png', parent);
+    this.progressBar = new ImageProgressBar('img/rocket.png', 10, 10, 208/2, 280/2.6,90);
+    this.setProgress(0);
 
     // Simulate progress towards a target
 
-    this.setProgress(50)
 
     this.addPlayerControls()
     this.planetPosition=[]
@@ -68,8 +67,6 @@ export default class Game{
     this.t=0
   }
   update(t=0) {
-    this.t++
-    this.setProgress(50*Math.sin(this.t/100))
 
     // this.background.planets.forEach((planet) => {
     //   const planetX=planet.x-this.camX+ canvas.width / 2
@@ -89,7 +86,8 @@ export default class Game{
     // });
   }
   setProgress(value) {
-    this.progressBar.setProgress(value/this.targetProgress);
+      this.currentProgress = value;
+      this.progressBar.setProgress(value / this.targetProgress);
   }
 
   render(ctx){
