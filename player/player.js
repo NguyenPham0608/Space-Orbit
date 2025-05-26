@@ -94,12 +94,12 @@ export default class Player {
       }
     } else if (this.attaching) {
       const planet = this.tetheredPlanet;
+      this.rotationAngle += this.rotationSpeed * this.game.deltaTime * 60;
       const desiredX = planet.x + this.targetRadius * Math.cos(this.rotationAngle);
       const desiredY = planet.y + this.targetRadius * Math.sin(this.rotationAngle);
-      const alpha = 0.1; // Interpolation factor for smooth easing
+      const alpha = 3 * this.game.deltaTime; // Slower, frame-rate independent easing
       this.x = this.x * (1 - alpha) + desiredX * alpha;
       this.y = this.y * (1 - alpha) + desiredY * alpha;
-      this.rotationAngle += this.rotationSpeed * this.game.deltaTime * 60;
 
       // Check if close enough to switch to attached state
       const dx = this.x - desiredX;
@@ -107,8 +107,6 @@ export default class Player {
       if (Math.hypot(dx, dy) < 1) {
         this.attached = true;
         this.attaching = false;
-        this.x = desiredX;
-        this.y = desiredY;
         this.distToPlanet = this.targetRadius;
       }
 
@@ -157,32 +155,44 @@ export default class Player {
       }
     }
 
-    // Detachment logic
-    if (!this.game.space && this.attached) {
-      this.flingSound.currentTime = 0;
-      this.flingSound.play();
-      const dx = this.x - this.lastPlanetX;
-      const dy = this.y - this.lastPlanetY;
-      let flingDx, flingDy;
-      if (this.rotationSpeed > 0) {
-        flingDx = -dy;
-        flingDy = dx;
-      } else {
-        flingDx = dy;
-        flingDy = -dx;
+    // Detachment logic (updated to ensure flinging works correctly)
+    if (!this.game.space && (this.attached || this.attaching)) {
+      if (this.tetheredPlanet) { // Ensure there's a planet to detach from
+        this.flingSound.currentTime = 0;
+        this.flingSound.play();
+        const planet = this.tetheredPlanet;
+        const dx = this.x - planet.x;
+        const dy = this.y - planet.y;
+        const currentDist = Math.hypot(dx, dy);
+        let flingDx, flingDy;
+
+        // Calculate fling direction perpendicular to the line to the planet
+        if (this.rotationSpeed > 0) {
+          flingDx = -dy;
+          flingDy = dx;
+        } else {
+          flingDx = dy;
+          flingDy = -dx;
+        }
+
+        const length = Math.hypot(flingDx, flingDy);
+        if (length > 0) {
+          // Calculate fling speed based on current distance and rotation speed
+          const flingSpeed = Math.abs(this.rotationSpeed * (currentDist / 100)) * 70;
+          this.vx = (flingDx / length) * flingSpeed;
+          this.vy = (flingDy / length) * flingSpeed;
+        } else {
+          this.vx = 0;
+          this.vy = 0;
+        }
+
+        // Reset all attachment-related states to ensure free movement
+        this.attached = false;
+        this.attaching = false;
+        this.tetheredPlanet = null;
+        this.wasAttached = false;
+        this.rotationAngle = 0; // Reset rotation angle to stop spinning
       }
-      const length = Math.hypot(flingDx, flingDy);
-      if (length > 0) {
-        const flingSpeed = Math.abs(this.rotationSpeed * (this.distToPlanet / 100)) * 70;
-        this.vx = (flingDx / length) * flingSpeed;
-        this.vy = (flingDy / length) * flingSpeed;
-      } else {
-        this.vx = 0;
-        this.vy = 0;
-      }
-      this.attached = false;
-      this.wasAttached = false;
-      this.tetheredPlanet = null;
     }
 
     // Free movement
@@ -299,13 +309,13 @@ export default class Player {
             availableSound.currentTime = 0;
             availableSound.play();
           }
-          this.explode(10,coin.x,coin.y);
+          this.explode(10, coin.x, coin.y);
         }
       }
     });
   }
 
-  explode(num,x,y){
+  explode(num, x, y) {
     for (let i = 0; i < num; i++) {
       const angle = Math.random() * 2 * Math.PI;
       const speed = 1 + Math.random() * 5;
