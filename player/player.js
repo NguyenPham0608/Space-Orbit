@@ -39,7 +39,7 @@ export default class Player {
     this.latchSound.volume = 0.8;
     this.coinSoundPool = [];
     for (let i = 0; i < 5; i++) {
-      const audio = new Audio("audio/coin.mp3");
+      const audio = new Audio("audio/coin2.mp3");
       audio.volume = 0.7;
       this.coinSoundPool.push(audio);
     }
@@ -299,23 +299,27 @@ export default class Player {
             availableSound.currentTime = 0;
             availableSound.play();
           }
-          for (let i = 0; i < 25; i++) {
-            const angle = Math.random() * 2 * Math.PI;
-            const speed = 1 + Math.random() * 2;
-            const vx = speed * Math.cos(angle);
-            const vy = speed * Math.sin(angle);
-            this.coinEffectParticles.push({
-              worldX: coin.x,
-              worldY: coin.y,
-              vx: vx,
-              vy: vy,
-              opacity: 1,
-              size: 3
-            });
-          }
+          this.explode(10,coin.x,coin.y);
         }
       }
     });
+  }
+
+  explode(num,x,y){
+    for (let i = 0; i < num; i++) {
+      const angle = Math.random() * 2 * Math.PI;
+      const speed = 1 + Math.random() * 5;
+      const vx = speed * Math.cos(angle);
+      const vy = speed * Math.sin(angle);
+      this.coinEffectParticles.push({
+        worldX: x,
+        worldY: y,
+        vx: vx,
+        vy: vy,
+        opacity: 1,
+        size: 3
+      });
+    }
   }
 
   attractScraps() {
