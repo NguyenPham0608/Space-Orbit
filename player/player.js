@@ -10,8 +10,6 @@ export default class Player {
     this.vy = 0;
     this.radius = 10;
     this.attached = false;
-    this.attaching = false; // New property for transition phase
-    this.targetRadius = 0;  // Target orbit radius during attaching
     this.tether = new Tether(this);
     this.rotationAngle = 0;
     this.rotationSpeed = 0.07;
@@ -45,14 +43,13 @@ export default class Player {
     }
     this.angle = 0;
     this.collectedScraps = 0;
+    this.orbitalRotationSpeed = 0.03; // Base value, will be adjusted dynamically
   }
 
-  rotateAround(centerPos, distance, deltaTime) {
-    this.rotationAngle += this.rotationSpeed * deltaTime * 60;
-    const newX = centerPos.x + this.game.camX + distance * Math.cos(this.rotationAngle);
-    const newY = centerPos.y + this.game.camY + distance * Math.sin(this.rotationAngle);
-    this.x = newX;
-    this.y = newY;
+  rotateAround(centerPos, distance) {
+    this.rotationAngle += this.rotationSpeed;
+    this.x = centerPos.x + distance * Math.cos(this.rotationAngle);
+    this.y = centerPos.y + distance * Math.sin(this.rotationAngle);
   }
 
   update() {
@@ -76,7 +73,8 @@ export default class Player {
             this.destroyed = true;
           }
         }
-        dist -= 0.3; // Maintain original behavior of tightening orbit
+        dist -= 0.3; // Maintain orbit tightening
+        if (dist < planet.radius) dist = planet.radius; // Prevent going inside planet
         this.distToPlanet = dist;
         this.tether.tetherEndX = planetX;
         this.tether.tetherEndY = planetY;
@@ -84,38 +82,13 @@ export default class Player {
         this.lastPlanetX = planet.x;
         this.lastPlanetY = planet.y;
         this.rotateAround(
-          { x: planet.x - this.game.camX, y: planet.y - this.game.camY },
-          dist,
-          this.game.deltaTime
+          { x: planet.x, y: planet.y },
+          dist
         );
       } else {
         this.attached = false;
         this.tetheredPlanet = null;
       }
-    } else if (this.attaching) {
-      const planet = this.tetheredPlanet;
-      this.rotationAngle += this.rotationSpeed * this.game.deltaTime * 60;
-      const desiredX = planet.x + this.targetRadius * Math.cos(this.rotationAngle);
-      const desiredY = planet.y + this.targetRadius * Math.sin(this.rotationAngle);
-      const alpha = 3 * this.game.deltaTime; // Slower, frame-rate independent easing
-      this.x = this.x * (1 - alpha) + desiredX * alpha;
-      this.y = this.y * (1 - alpha) + desiredY * alpha;
-
-      // Check if close enough to switch to attached state
-      const dx = this.x - desiredX;
-      const dy = this.y - desiredY;
-      if (Math.hypot(dx, dy) < 1) {
-        this.attached = true;
-        this.attaching = false;
-        this.distToPlanet = this.targetRadius;
-      }
-
-      // Update tether visuals during transition
-      const planetX = planet.x - this.game.camX + window.innerWidth / 2;
-      const planetY = planet.y - this.game.camY + window.innerHeight / 2;
-      this.tether.tetherEndX = planetX;
-      this.tether.tetherEndY = planetY;
-      this.tether.tetherLength = Math.hypot(this.x - planet.x, this.y - planet.y);
     } else {
       if (this.game.space) {
         let closestPlanet = null;
@@ -130,34 +103,49 @@ export default class Player {
           }
         }
         if (closestPlanet) {
-          this.attaching = true;
+          this.attached = true;
           this.tetheredPlanet = closestPlanet;
-          this.targetRadius = minDist; // Set target orbit radius to initial distance
+          this.distToPlanet = minDist;
           const dx = this.x - closestPlanet.x;
           const dy = this.y - closestPlanet.y;
           this.rotationAngle = Math.atan2(dy, dx);
-          const radialX = dx;
-          const radialY = dy;
-          const radialLength = Math.hypot(radialX, radialY);
+
+          // Calculate tangential velocity for smooth transition
+          const radialLength = minDist;
+          let direction = 1;
+          let tangentialVelocity = 0;
           if (radialLength > 0) {
-            const normRadialX = radialX / radialLength;
-            const normRadialY = radialY / radialLength;
+            const normRadialX = dx / radialLength;
+            const normRadialY = dy / radialLength;
             const tangentialX = -normRadialY;
             const tangentialY = normRadialX;
-            const tangentialVelocity = this.vx * tangentialX + this.vy * tangentialY;
-            this.rotationSpeed = 0.06 * (tangentialVelocity >= 0 ? 1 : -1);
-          } else {
-            this.rotationSpeed = 0.06;
+            tangentialVelocity = this.vx * tangentialX + this.vy * tangentialY;
+            direction = tangentialVelocity >= 0 ? 1 : -1;
           }
+
+          // Set rotation speed based on incoming velocity
+          const speed = Math.hypot(this.vx, this.vy);
+          this.rotationSpeed = (speed / radialLength) * direction;
+          // Cap rotation speed to prevent unrealistic orbits
+          const maxRotationSpeed = 0.1; // Adjust as needed
+          if (Math.abs(this.rotationSpeed) > maxRotationSpeed) {
+            this.rotationSpeed = maxRotationSpeed * direction;
+          }
+          // Ensure minimum rotation speed for stable orbit
+          const minRotationSpeed = this.orbitalRotationSpeed;
+          if (Math.abs(this.rotationSpeed) < minRotationSpeed) {
+            this.rotationSpeed = minRotationSpeed * direction;
+          }
+
           this.latchSound.currentTime = 0;
           this.latchSound.play();
         }
       }
     }
 
-    // Detachment logic (updated to ensure flinging works correctly)
-    if (!this.game.space && (this.attached || this.attaching)) {
-      if (this.tetheredPlanet) { // Ensure there's a planet to detach from
+    // Detachment logic
+    if (!this.game.space && this.attached) {
+      if (this.tetheredPlanet) {
         this.flingSound.currentTime = 0;
         this.flingSound.play();
         const planet = this.tetheredPlanet;
@@ -166,7 +154,6 @@ export default class Player {
         const currentDist = Math.hypot(dx, dy);
         let flingDx, flingDy;
 
-        // Calculate fling direction perpendicular to the line to the planet
         if (this.rotationSpeed > 0) {
           flingDx = -dy;
           flingDy = dx;
@@ -177,26 +164,22 @@ export default class Player {
 
         const length = Math.hypot(flingDx, flingDy);
         if (length > 0) {
-          // Calculate fling speed based on current distance and rotation speed
-          const flingSpeed = Math.abs(this.rotationSpeed * (currentDist / 100)) * 70;
-          this.vx = (flingDx / length) * flingSpeed;
-          this.vy = (flingDy / length) * flingSpeed;
+          const orbitalSpeed = Math.abs(this.rotationSpeed * currentDist);
+          this.vx = (flingDx / length) * orbitalSpeed;
+          this.vy = (flingDy / length) * orbitalSpeed;
         } else {
           this.vx = 0;
           this.vy = 0;
         }
 
-        // Reset all attachment-related states to ensure free movement
         this.attached = false;
-        this.attaching = false;
         this.tetheredPlanet = null;
-        this.wasAttached = false;
-        this.rotationAngle = 0; // Reset rotation angle to stop spinning
+        this.rotationAngle = 0;
       }
     }
 
     // Free movement
-    if (!this.attached && !this.attaching) {
+    if (!this.attached) {
       this.x += this.vx;
       this.y += this.vy;
 
@@ -223,7 +206,7 @@ export default class Player {
     this.game.camY += 0.02 * (this.y - this.game.camY);
 
     // Update angle
-    if (this.attached || this.attaching) {
+    if (this.attached) {
       const planet = this.tetheredPlanet;
       const dx = planet.x - this.x;
       const dy = planet.y - this.y;
@@ -335,9 +318,6 @@ export default class Player {
   attractScraps() {
     this.game.coins.forEach(coin => {
       if (!coin.power) {
-        const dx = coin.x - this.x;
-        const dy = coin.y - this.y;
-        const dist = Math.hypot(dx, dy);
         coin.attracted = true;
       }
     });
