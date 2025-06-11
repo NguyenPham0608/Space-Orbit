@@ -1,11 +1,11 @@
 body {
     background: #000;
-    font-family:comfortaa;
-    overflow:hidden;
+    font-family: comfortaa;
+    overflow: hidden;
     transition: 3s all;
 }
-  
-#progress{
+
+#progress {
     margin: 20px;
     position: absolute;
     top: 10px;
@@ -13,7 +13,8 @@ body {
     z-index: 100;
 
 }
-#link{
+
+#link {
     position: absolute;
     top: 10px;
     right: 10px;
@@ -24,7 +25,7 @@ body {
     transition: 0.5s all;
 }
 
-#link:hover{
+#link:hover {
     position: absolute;
     top: 10px;
     right: 10px;
@@ -32,6 +33,7 @@ body {
     text-decoration: none;
     z-index: 100;
 }
+
 .message {
     user-select: none;
     position: absolute;
@@ -48,9 +50,12 @@ body {
     border-radius: 10px;
     padding: 35px;
     margin: 20px;
-    transition: transform 0.5s ease-out; /* Smooth animation */
+    transition: transform 0.5s ease-out;
+    animation: glow 2s infinite ease-in-out;
+    z-index: 1000;
 }
-.blackout{
+
+.blackout {
     user-select: none;
     opacity: 1;
     width: 100%;
@@ -64,4 +69,18 @@ body {
 
 .hidden {
     display: none;
+}
+
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 10px rgba(0, 157, 255, 0.8);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(0, 157, 255, 1);
+    }
+
+    100% {
+        box-shadow: 0 0 10px rgba(0, 157, 255, 0.8);
+    }
 }
