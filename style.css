@@ -52,8 +52,53 @@ body {
     margin: 20px;
     transition: transform 0.5s ease-out;
     animation: glow 2s infinite ease-in-out;
-    z-index: 1000;
+    z-index: 10000000;
 }
+
+.message2 {
+    display: none;
+    user-select: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    font-size: 19px;
+    width: 300px;
+    height: 200px;
+    line-height: 27px;
+    color: #000;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 35px;
+    margin: 20px;
+    transition: 0.5s all;
+    animation: glow 2s infinite ease-in-out;
+    z-index: 10000000;
+}
+
+#done {
+    margin: 15px;
+    font-family: comfortaa;
+    border-radius: 10px;
+    padding: 10px;
+    border: none;
+    color: #fff;
+    font-size: 25px;
+    background-color: #009dff;
+    transition: 0.5s all;
+}
+
+#done:hover {
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 10px;
+    border: none;
+    color: #009dff;
+    background-color: #e0e0e0;
+    transition: 0.5s all;
+}
+
 
 .blackout {
     user-select: none;
@@ -64,7 +109,7 @@ body {
     top: 0;
     left: 0;
     background-color: #000;
-    transition: 3s all;
+    transition: 2s all;
 }
 
 .hidden {

@@ -29,8 +29,9 @@ const message1 = document.getElementById("message1")
 typeWriter(message1, "The mothership has been destroyed due to a collision with a rouge unpredicted planet! 🌍 💥 🪐", 10)
 const message2 = document.getElementById("message2")
 const message3 = document.getElementById("message3")
-
+const message4 = document.getElementById("message4")
 const blackout = document.getElementById("blackout")
+const doneButton = document.getElementById("done")
 
 function typeWriter(element, text, speed = 50) {
   let i = 0;
@@ -62,14 +63,14 @@ export default class Game {
     this.camY = 0
     this.intro = true
     this.currentProgress = 0
-    this.targetProgress = 100
+    this.targetProgress = 5
     this.coins = []
     for (let i = 0; i < 800; i++) {
       this.coins.push(new Coin(this, getRandomArbitrary(-canvas.width * 3, canvas.width * 3), getRandomArbitrary(-canvas.height * 3, canvas.height * 3)))
     }
     this.player = new Player(0, 0, this)
     this.background = new Background(this)
-    this.progressBar = new ImageProgressBar('img/rocket.png', 10, 10, 208 / 2, 280 / 2.6, 90);
+    this.progressBar = new ImageProgressBar('img/rocket.png', 10, 10, 208 / 2, 280 / 2.6, 90, this);
     this.setProgress(0);
 
     // Simulate progress towards a target
@@ -79,6 +80,15 @@ export default class Game {
     this.planetPosition = []
     this.deltaTime = 0
     this.t = 0
+    this.animationImages = []
+    for (let i = 1; i < 23; i++) {
+      const img = new Image()
+      img.src = `img/animation/${i}.png`
+      this.animationImages.push(img)
+    }
+    this.won = -20
+    this.imgFactor = window.innerWidth / 480
+    this.stage2 = false
   }
   update(t = 0) {
 
@@ -105,17 +115,56 @@ export default class Game {
   }
 
   render(ctx) {
-    if (!this.intro) {
-      this.background.draw(ctx)
-      this.coins.forEach(coin => coin.draw(ctx))
-
-      this.player.update()
-      this.player.tether.draw(ctx)
-
-      this.player.draw(ctx)
-      this.progressBar.draw(ctx)
+    if (this.won > 0) {
+      this.t++
     }
+    console.log(this.won)
+    if (this.won < 0) {
+      if (!this.intro) {
+        this.background.draw(ctx)
+        this.coins.forEach(coin => coin.draw(ctx))
 
+        this.player.update()
+        this.player.tether.draw(ctx)
+
+        this.player.draw(ctx)
+        this.progressBar.draw(ctx)
+      }
+
+    } else {
+      if (Math.floor(this.t / 3.5) < 22) {
+        ctx.drawImage(this.animationImages[0], 0, 0, 480 * this.imgFactor, 360 * this.imgFactor)
+      } else {
+        if (Math.floor(this.t / 3.5) < 43) {
+          ctx.drawImage(this.animationImages[Math.floor(this.t / 3.5) - 22], 0, 0, 480 * this.imgFactor, 360 * this.imgFactor)
+        } else {
+          if (ctx.globalAlpha > 0.05) {
+            if (!this.stage2) {
+              ctx.globalAlpha -= 0.01
+              ctx.drawImage(this.animationImages[0], 0, 0, 480 * this.imgFactor, 360 * this.imgFactor)
+            }
+
+          } else {
+            this.stage2 = true
+
+          }
+          if (this.stage2) {
+            ctx.globalAlpha += 0.01
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.font = "50px Comfortaa";
+            ctx.fillText("Mission Accomplished", window.innerWidth / 2, window.innerHeight / 2)
+          }
+        }
+      }
+    }
+  }
+  win() {
+    message4.style.display = "block"
+    message3.style.display = "none"
+    message2.style.display = "none"
+    message1.style.display = "none"
+    blackout.style.opacity = "1"
   }
   addPlayerControls() {
     window.addEventListener("mousemove", (e) => {
@@ -260,6 +309,17 @@ function zipOffScreen(element, options = {}) {
   // Attach event listener
   document.addEventListener('click', handler);
 }
+
+doneButton.addEventListener("click", () => {
+  message4.style.opacity = 0
+  doneButton.style.cursor = "default"
+  setTimeout(() => {
+    blackout.style.opacity = 0
+
+    game.won = 22
+
+  }, 3000)
+})
 
 loop()
 

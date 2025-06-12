@@ -1,5 +1,6 @@
 export default class ImageProgressBar {
-    constructor(imageUrl, x, y, width, height, rotation = 0) {
+    constructor(imageUrl, x, y, width, height, rotation = 0, game) {
+        this.game = game
         this.imageUrl = imageUrl;
         this.x = x;
         this.y = y;
@@ -9,6 +10,7 @@ export default class ImageProgressBar {
         this.image = new Image();
         this.progress = 0;
         this.isLoaded = false;
+        this.complete = false
         this.init();
     }
 
@@ -32,6 +34,12 @@ export default class ImageProgressBar {
     }
 
     draw(ctx) {
+        if (this.progress >= 1) {
+            if (!this.complete) {
+                this.game.win()
+                this.complete = true
+            }
+        }
         if (!this.isLoaded) return;
 
         const filledWidth = this.progress * this.width;
