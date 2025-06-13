@@ -26,7 +26,7 @@ canvas.style.width = window.innerWidth + "px";
 canvas.style.height = window.innerHeight + "px";
 
 const message1 = document.getElementById("message1")
-typeWriter(message1, "The mothership has been destroyed due to a collision with a rouge unpredicted planet! 🌍 💥 🪐", 10)
+typeWriter(message1, "The mothership has been destroyed due to a collision with a rouge unpredicted planet!🌍 💥 🪐", 10)
 const message2 = document.getElementById("message2")
 const message3 = document.getElementById("message3")
 const message4 = document.getElementById("message4")
@@ -132,11 +132,12 @@ export default class Game {
       }
 
     } else {
-      if (Math.floor(this.t / 3.5) < 22) {
+      const speed = 4.5
+      if (Math.floor(this.t / speed) < 22) {
         ctx.drawImage(this.animationImages[0], 0, 0, 480 * this.imgFactor, 360 * this.imgFactor)
       } else {
-        if (Math.floor(this.t / 3.5) < 43) {
-          ctx.drawImage(this.animationImages[Math.floor(this.t / 3.5) - 22], 0, 0, 480 * this.imgFactor, 360 * this.imgFactor)
+        if (Math.floor(this.t / speed) < 43) {
+          ctx.drawImage(this.animationImages[Math.floor(this.t / speed) - 22], 0, 0, 480 * this.imgFactor, 360 * this.imgFactor)
         } else {
           if (ctx.globalAlpha > 0.05) {
             if (!this.stage2) {
@@ -233,19 +234,21 @@ window.addEventListener("click", function (e) {
     // zipOffScreen(message1)
     message1.classList.remove("message")
     message1.classList.add("hidden")
-    typeWriter(message2, "You and your crew are now lost in space with one small ship. 🚀", 10)
+    typeWriter(message2, "You and your crew are now lost in space with one small ship 🚀", 10)
 
   }
   else if (message2.classList.contains("message")) {
     message2.classList.remove("message")
     message2.classList.add("hidden")
-    typeWriter(message3, "Your job is to collect the bits of scrap metal debris floating around from the destruction of the mothership in order to reconstruct it and fly back to Earth, universes away. 🛰️ 🛠️", 10)
+    typeWriter(message3, "Your job is to collect the bits of scrap metal debris floating around from the destruction of the mothership in order to reconstruct it and fly back to Earth, universes away 🛰️ 🛠️", 10)
 
   } else {
-    message3.classList.remove("message")
-    message3.classList.add("hidden")
-    blackout.style.opacity = 0
-    game.intro = false
+    if (game.intro) {
+      message3.classList.remove("message")
+      message3.classList.add("hidden")
+      blackout.style.opacity = 0
+      game.intro = false
+    }
   }
 })
 
@@ -316,7 +319,9 @@ doneButton.addEventListener("click", () => {
   setTimeout(() => {
     blackout.style.opacity = 0
 
-    game.won = 22
+    setTimeout(() => {
+      game.won = 22
+    }, 1000)
 
   }, 3000)
 })

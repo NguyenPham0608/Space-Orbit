@@ -41,10 +41,10 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
-    font-size: 19px;
-    width: 300px;
-    height: 200px;
-    line-height: 27px;
+    font-size: 39px;
+    width: 500px;
+    height: auto;
+    line-height: 50px;
     color: #000;
     background-color: #fff;
     border-radius: 10px;
@@ -53,6 +53,7 @@ body {
     transition: transform 0.5s ease-out;
     animation: glow 2s infinite ease-in-out;
     z-index: 10000000;
+    font-weight: 900;
 }
 
 .message2 {
@@ -63,8 +64,8 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
-    font-size: 19px;
-    width: 300px;
+    font-size: 40px;
+    width: 370px;
     height: 200px;
     line-height: 27px;
     color: #000;
@@ -75,6 +76,7 @@ body {
     transition: 0.5s all;
     animation: glow 2s infinite ease-in-out;
     z-index: 10000000;
+    font-weight: 900;
 }
 
 #done {
@@ -84,9 +86,10 @@ body {
     padding: 10px;
     border: none;
     color: #fff;
-    font-size: 25px;
+    font-size: 35px;
     background-color: #009dff;
     transition: 0.5s all;
+    font-weight: 900;
 }
 
 #done:hover {
@@ -101,6 +104,9 @@ body {
 
 
 .blackout {
+    background-image: url("img/stars.jpg");
+    background-repeat: repeat;
+    background-size: auto;
     user-select: none;
     opacity: 1;
     width: 100%;
@@ -110,22 +116,34 @@ body {
     left: 0;
     background-color: #000;
     transition: 2s all;
+    animation: scroll-diagonal 15s infinite linear;
 }
 
 .hidden {
     display: none;
 }
 
-@keyframes glow {
+@keyframes scroll-diagonal {
     0% {
-        box-shadow: 0 0 10px rgba(0, 157, 255, 0.8);
-    }
-
-    50% {
-        box-shadow: 0 0 20px rgba(0, 157, 255, 1);
+        background-position: 0 0;
     }
 
     100% {
-        box-shadow: 0 0 10px rgba(0, 157, 255, 0.8);
+        background-position: 622px 360px;
+        /* moves diagonally down-right */
+    }
+}
+
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 100px rgba(0, 157, 255, 0.8);
+    }
+
+    50% {
+        box-shadow: 0 0 200px rgba(0, 157, 255, 1);
+    }
+
+    100% {
+        box-shadow: 0 0 100px rgba(0, 157, 255, 0.8);
     }
 }
