@@ -147,13 +147,18 @@ export default class Game {
 
           } else {
             this.stage2 = true
-
           }
+
           if (this.stage2) {
+            // const targetGlow = getRandomArbitrary(10, 20)
             ctx.globalAlpha += 0.01
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.font = "50px Comfortaa";
+            ctx.font = "900 50px Comfortaa";
+            ctx.shadowColor = "cyan";      // The glow color
+            ctx.shadowBlur = 20;           // How blurry the glow is
+            ctx.shadowOffsetX = 0;         // Centered glow
+            ctx.shadowOffsetY = 0;
             ctx.fillText("Mission Accomplished", window.innerWidth / 2, window.innerHeight / 2)
           }
         }
@@ -321,7 +326,7 @@ doneButton.addEventListener("click", () => {
 
     setTimeout(() => {
       game.won = 22
-    }, 1000)
+    }, 100)
 
   }, 3000)
 })
