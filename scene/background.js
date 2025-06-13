@@ -3,7 +3,7 @@ import Planet from "./planet.js";
 export default class Background {
   constructor(game) {
     this.game = game;
-    this.numPlanets = 300;
+    this.numPlanets = 1000;
     this.planets = [];
     this.scaleFactor = 1.2;
     this.minDistance = 700; // Minimum distance between planets
@@ -15,9 +15,9 @@ export default class Background {
       const maxAttempts = 100;
 
       while (!placed && attempts < maxAttempts) {
-        const x = getRandomArbitrary(-5000, 5000) * this.scaleFactor;
-        const y = getRandomArbitrary(-5000, 5000) * this.scaleFactor;
-        
+        const x = getRandomArbitrary(-10000, 10000) * this.scaleFactor;
+        const y = getRandomArbitrary(-10000, 10000) * this.scaleFactor;
+
         // Check distance to existing planets using squared distance for efficiency
         let tooClose = false;
         for (const planet of this.planets) {
