@@ -65,7 +65,7 @@ export default class Game {
     this.currentProgress = 0
     this.targetProgress = 100
     this.coins = []
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 600; i++) {
       this.coins.push(new Coin(this, getRandomArbitrary(-canvas.width * 3, canvas.width * 3), getRandomArbitrary(-canvas.height * 3, canvas.height * 3)))
     }
     this.player = new Player(0, 0, this)
